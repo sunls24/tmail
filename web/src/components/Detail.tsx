@@ -1,4 +1,3 @@
-import React, { useMemo, useRef, useState } from "react"
 import {
   AlertDialog,
   AlertDialogContent,
@@ -7,13 +6,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog.tsx"
-import type { Attachment, Envelope } from "@/lib/types.ts"
 import { Button } from "@/components/ui/button.tsx"
-import { Download, Minimize2, Paperclip, RotateCw } from "lucide-react"
-import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
-import { fetchError, fmtDate } from "@/lib/utils.ts"
-import { ABORT_SAFE } from "@/lib/constant.ts"
 import { type language, useTranslations } from "@/i18n/ui"
+import { ABORT_SAFE } from "@/lib/constant.ts"
+import type { Attachment, Envelope } from "@/lib/types.ts"
+import { fetchError, fmtDate } from "@/lib/utils.ts"
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import { Download, Minimize2, Paperclip, RotateCw } from "lucide-react"
+import React, { useMemo, useRef, useState } from "react"
 
 function Detail({
   children,
@@ -56,7 +56,7 @@ function Detail({
   return (
     <AlertDialog onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent className="flex max-h-full flex-col sm:max-w-4xl">
+      <AlertDialogContent className="flex max-h-11/12 flex-col sm:max-w-4xl">
         <AlertDialogHeader className="relative">
           <AlertDialogTitle>{envelope.subject}</AlertDialogTitle>
           <AlertDialogDescription className="flex flex-col justify-between sm:flex-row">

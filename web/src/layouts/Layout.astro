@@ -1,7 +1,6 @@
 ---
 import { useTranslations, type language } from "@/i18n/ui"
 import { Toaster } from "@/components/ui/sonner"
-import Umami from "@/components/Umami.astro"
 
 const { lang } = Astro.props
 const t = useTranslations(lang as language)
@@ -36,11 +35,15 @@ import "@/style/global.css"
       sizes="180x180"
     />
     <meta name="description" content={t("pageDesc")} />
+    <script
+      is:inline
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "82e9b6f424234f19a16c1bc554f3ca41"}'></script>
     <title>{t("pageTitle")}</title>
   </head>
   <body class="flex flex-col">
     <slot />
-    <Umami />
     <Toaster position="top-right" richColors={true} client:load />
   </body>
 </html>

@@ -1,7 +1,5 @@
 ## 📮 Temporary Mail
 
-**(V2 version under reconstruction)**
-
 Using Golang + Astro + React + Long Polling to get emails in real-time
 
 - [x] Email CSS style isolation

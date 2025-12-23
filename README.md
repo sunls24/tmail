@@ -1,7 +1,5 @@
 ## 📮 临时邮箱
 
-**(V2版本重构中)**
-
 使用 Golang + Astro + React + Long Polling 实时获取邮件
 
 - [x] 邮件 CSS 样式隔离

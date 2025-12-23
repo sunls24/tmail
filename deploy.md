@@ -29,6 +29,7 @@
 **目前仅支持 PostgreSQL**
 
 - `DB_HOST`: 数据库地址
+- `DB_PORT`: 数据库地址端口
 - `DB_PASS`: 数据库密码
 - `DB_NAME`: 数据库名称，默认`tmail`
 
@@ -40,11 +41,6 @@
 - `HOST`: 服务监听地址，默认为`127.0.0.1`
 - `PORT`: 服务监听端口，默认为`3000`
 
-### 统计
-- `UMAMI_ID`: Umami 统计的 website-id
-- `UMAMI_URL`: Umami 统计的 script.js 地址
-- `UMAMI_DOMAINS`: Umami 统计只在特定域名运行，逗号分割
-
 ## 部署
 
 _请修改其中的环境变量配置_
@@ -52,7 +48,7 @@ _请修改其中的环境变量配置_
 ### Docker
 
 ```shell
-docker run --name tmail -d --restart unless-stopped -e 'DB_HOST=127.0.0.1' -e 'DB_PASS=postgres' -e 'HOST=0.0.0.0' -e 'DOMAIN_LIST=isco.eu.org,chato.eu.org' -p 3000:3000 sunls24/tmail
+docker run --name tmail -d --restart unless-stopped -e 'DB_HOST=127.0.0.1' -e 'DB_PASS=postgres' -e 'HOST=0.0.0.0' -e 'DOMAIN_LIST=isco.eu.org,chato.eu.org' -p 3000:3000 sunls24/tmail:latest
 ```
 
 ### Docker Compose & Caddy (推荐)

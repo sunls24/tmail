@@ -3,7 +3,6 @@ package schedule
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -12,6 +11,8 @@ import (
 	"tmail/ent"
 	"tmail/ent/attachment"
 	"tmail/ent/envelope"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Scheduler struct {
@@ -55,7 +56,7 @@ func (s *Scheduler) cleanUpExpired() {
 		if count > 0 {
 			log.Info().Msgf("clean up expired %d", count)
 		}
-	}, time.Hour)
+	}, time.Hour*24)
 }
 
 func removeEmptyDir(baseDir string) {
