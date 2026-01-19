@@ -1,4 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import Actions from "@/components/Actions.tsx"
+import Detail from "@/components/Detail.tsx"
+import Mounted from "@/components/Mounted.tsx"
+import { Skeleton } from "@/components/ui/skeleton.tsx"
+import { type language, useTranslations } from "@/i18n/ui.ts"
+import { ABORT_SAFE } from "@/lib/constant.ts"
+import { $address, initStore } from "@/lib/store/store.ts"
+import type { Envelope } from "@/lib/types.ts"
+import { fetchError, fmtDate, fmtFrom, fmtString } from "@/lib/utils.ts"
+import { useStore } from "@nanostores/react"
+import { clsx } from "clsx"
 import {
   ClipboardCopy,
   ExternalLink,
@@ -6,18 +16,8 @@ import {
   Loader,
   RotateCw,
 } from "lucide-react"
-import Actions from "@/components/Actions.tsx"
-import type { Envelope } from "@/lib/types.ts"
-import { fetchError, fmtDate, fmtFrom, fmtString } from "@/lib/utils.ts"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { useStore } from "@nanostores/react"
-import { $address, initStore } from "@/lib/store/store.ts"
-import { ABORT_SAFE } from "@/lib/constant.ts"
-import Mounted from "@/components/Mounted.tsx"
-import { Skeleton } from "@/components/ui/skeleton.tsx"
-import Detail from "@/components/Detail.tsx"
-import { type language, useTranslations } from "@/i18n/ui.ts"
-import { clsx } from "clsx"
 
 function Content({ lang }: { lang: string }) {
   const [latestId, setLatestId] = useState(-1)
@@ -102,7 +102,7 @@ function Content({ lang }: { lang: string }) {
   }
 
   return (
-    <div className="sm:animate-in sm:slide-in-from-right-2/3 flex w-full flex-col pb-4 duration-300">
+    <div className="flex w-full flex-col pb-4">
       <div className="block sm:hidden">
         <Actions lang={lang} />
       </div>

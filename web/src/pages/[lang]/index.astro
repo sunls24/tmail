@@ -20,11 +20,7 @@ const { lang } = Astro.params
   <Header lang={lang} />
   <div class="mx-auto flex min-h-0 w-11/12 max-w-4xl flex-1 gap-4">
     <div class="hidden sm:block">
-      <Actions
-        lang={lang}
-        className="animate-in slide-in-from-left"
-        client:load
-      />
+      <Actions lang={lang} client:load />
     </div>
     <Content lang={lang} client:load />
   </div>
