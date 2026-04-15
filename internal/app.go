@@ -1,11 +1,8 @@
 package internal
 
 import (
+	"context"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"strings"
@@ -16,6 +13,11 @@ import (
 	"tmail/internal/route"
 	"tmail/internal/schedule"
 	"tmail/web"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type App struct {
@@ -54,6 +56,10 @@ func (app App) Run() error {
 	}))
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		e.DefaultHTTPErrorHandler(err, c)
+		//goland:noinspection GoDirectComparisonOfErrors
+		if err == context.Canceled {
+			return
+		}
 		//goland:noinspection GoTypeAssertionOnErrors
 		if _, ok := err.(*echo.HTTPError); !ok {
 			log.Err(err).Send()
@@ -77,7 +83,7 @@ func i18n(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func getLang(req *http.Request) string {
-	if isGoogleBot(req) {
+	if isSearchEngineBot(req) {
 		return constant.LangZh
 	}
 
@@ -88,7 +94,12 @@ func getLang(req *http.Request) string {
 	return constant.LangEn
 }
 
-func isGoogleBot(req *http.Request) bool {
-	ua := req.Header.Get("User-Agent")
-	return strings.Contains(strings.ToLower(ua), "googlebot")
+func isSearchEngineBot(req *http.Request) bool {
+	ua := strings.ToLower(req.Header.Get("User-Agent"))
+	for _, bot := range []string{"googlebot", "bingbot", "duckduckbot", "baiduspider", "yandexbot"} {
+		if strings.Contains(ua, bot) {
+			return true
+		}
+	}
+	return false
 }

@@ -7,6 +7,7 @@ import (
 	"tmail/ent"
 	"tmail/ent/attachment"
 	"tmail/ent/envelope"
+	"tmail/ent/predicate"
 	"tmail/internal/pubsub"
 )
 
@@ -16,11 +17,25 @@ func Fetch(ctx *Context) error {
 		return ctx.Bad("not found to address")
 	}
 	admin := to == ctx.AdminAddress
+	since := time.Time{}
+	if !admin {
+		sinceStr := ctx.QueryParam("since")
+		if sinceStr != "" {
+			ts, err := strconv.ParseInt(sinceStr, 10, 64)
+			if err == nil && ts >= 0 {
+				since = time.Unix(ts, 0)
+			}
+		}
+	}
 	query := ctx.ent.Envelope.Query().
 		Select(envelope.FieldID, envelope.FieldTo, envelope.FieldFrom, envelope.FieldSubject, envelope.FieldCreatedAt).
 		Order(ent.Desc(envelope.FieldID))
 	if !admin {
-		query.Where(envelope.To(to))
+		wheres := []predicate.Envelope{envelope.To(to)}
+		if !since.IsZero() {
+			wheres = append(wheres, envelope.CreatedAtGTE(since))
+		}
+		query.Where(wheres...)
 	} else {
 		query.Limit(100)
 	}
