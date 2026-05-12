@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,10 +13,11 @@ import (
 	"tmail/internal/schedule"
 	"tmail/web"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/sunls24/gox"
+	"github.com/sunls24/gox/server"
 )
 
 type App struct {
@@ -46,33 +46,18 @@ func (app App) Run() error {
 	}
 	defer client.Close()
 
-	schedule.New(client, cfg).Run()
+	return server.Start(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), func(srv *server.Server) {
+		srv.Echo.Pre(i18n)
+		ctx := api.ServerContext(srv, cfg, client)
+		schedule.New(ctx).Run()
 
-	e := echo.New()
-	e.Pre(i18n)
-	e.Use(api.Middleware(client, cfg))
-	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
-		DisablePrintStack: true,
-	}))
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		e.DefaultHTTPErrorHandler(err, c)
-		//goland:noinspection GoDirectComparisonOfErrors
-		if err == context.Canceled {
-			return
-		}
-		//goland:noinspection GoTypeAssertionOnErrors
-		if _, ok := err.(*echo.HTTPError); !ok {
-			log.Err(err).Send()
-		}
-	}
-
-	route.Register(e)
-	e.StaticFS("/", echo.MustSubFS(web.FS, "dist"))
-	return e.Start(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port))
+		route.Register(srv.Echo)
+		srv.Echo.StaticFS("/", echo.MustSubFS(web.FS, "dist"))
+	})
 }
 
 func i18n(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		if c.Request().URL.Path != "/" {
 			return next(c)
 		}
@@ -83,15 +68,8 @@ func i18n(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func getLang(req *http.Request) string {
-	if isSearchEngineBot(req) {
-		return constant.LangZh
-	}
-
-	if al := req.Header.Get("Accept-Language"); strings.HasPrefix(al, constant.LangZh) {
-		return constant.LangZh
-	}
-
-	return constant.LangEn
+	al := req.Header.Get("Accept-Language")
+	return gox.If(isSearchEngineBot(req) || strings.HasPrefix(al, constant.LangZh), constant.LangZh, constant.LangEn)
 }
 
 func isSearchEngineBot(req *http.Request) bool {

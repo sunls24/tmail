@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button.tsx"
 import { type language, useTranslations } from "@/i18n/ui"
 import { ABORT_SAFE } from "@/lib/constant.ts"
 import type { Attachment, Envelope } from "@/lib/types.ts"
-import { fetchError, fmtDate } from "@/lib/utils.ts"
+import { apiFetch, fetchError, fmtDate } from "@/lib/utils.ts"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { Download, Minimize2, Paperclip, RotateCw } from "lucide-react"
 import React, { useMemo, useRef, useState } from "react"
@@ -35,8 +35,9 @@ function Detail({
     if (open) {
       setLoading(true)
       controller.current = new AbortController()
-      fetch("/api/fetch/" + envelope.id, { signal: controller.current.signal })
-        .then((res) => res.json())
+      apiFetch<MailDetail>("/api/fetch/" + envelope.id, {
+        signal: controller.current.signal,
+      })
         .then((res) => {
           setAttachments(res.attachments)
           divRef.current!.attachShadow({ mode: "open" }).innerHTML = res.content
@@ -104,3 +105,8 @@ function Detail({
 }
 
 export default Detail
+
+type MailDetail = {
+  content: string
+  attachments: Attachment[]
+}

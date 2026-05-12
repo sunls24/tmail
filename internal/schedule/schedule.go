@@ -2,37 +2,38 @@ package schedule
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
-	"tmail/config"
-	"tmail/ent"
 	"tmail/ent/attachment"
 	"tmail/ent/envelope"
+	"tmail/internal/api"
 
 	"github.com/rs/zerolog/log"
+	"github.com/sunls24/gox"
+	"github.com/sunls24/gox/cron"
 )
 
 type Scheduler struct {
-	db  *ent.Client
-	cfg *config.Config
+	ctx context.Context
 }
 
-func New(db *ent.Client, cfg *config.Config) *Scheduler {
-	return &Scheduler{db: db, cfg: cfg}
+func New(ctx context.Context) *Scheduler {
+	return &Scheduler{ctx: ctx}
 }
 
 func (s *Scheduler) Run() {
-	go s.cleanUpExpired()
+	gox.SafeGo(s.cleanUpExpired)
 }
 
 func (s *Scheduler) cleanUpExpired() {
-	run(func() {
-		go removeEmptyDir(s.cfg.BaseDir)
+	cron.RunRepeat(func() {
+		gox.SafeGo(func() {
+			removeEmptyDir(api.Config(s.ctx).BaseDir)
+		})
 		expired := time.Now().Add(-time.Hour * 240)
-		list, err := s.db.Attachment.Query().Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).All(context.TODO())
+		list, err := api.DB(s.ctx).Attachment.Query().Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).All(context.Background())
 		if err != nil {
 			log.Err(err).Msg("Attachment Query")
 			return
@@ -40,7 +41,7 @@ func (s *Scheduler) cleanUpExpired() {
 		for _, a := range list {
 			_ = os.Remove(a.Filepath)
 		}
-		count, err := s.db.Attachment.Delete().Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).Exec(context.TODO())
+		count, err := api.DB(s.ctx).Attachment.Delete().Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).Exec(context.Background())
 		if err != nil {
 			log.Err(err).Msg("Attachment Delete")
 			return
@@ -48,7 +49,7 @@ func (s *Scheduler) cleanUpExpired() {
 		if count > 0 {
 			log.Info().Msgf("clean up attachment %d", count)
 		}
-		count, err = s.db.Envelope.Delete().Where(envelope.CreatedAtLT(expired)).Exec(context.TODO())
+		count, err = api.DB(s.ctx).Envelope.Delete().Where(envelope.CreatedAtLT(expired)).Exec(context.Background())
 		if err != nil {
 			log.Err(err).Msg("Envelope Delete")
 			return
@@ -81,21 +82,5 @@ func removeEmptyDir(baseDir string) {
 	})
 	if err != nil {
 		log.Err(err).Msg("removeEmptyDir")
-	}
-}
-
-func run(fn func(), dur time.Duration) {
-	for {
-		select {
-		case <-time.Tick(dur):
-			go func() {
-				defer func() {
-					if err := recover(); err != nil {
-						log.Error().Msg(fmt.Sprint(err))
-					}
-				}()
-				fn()
-			}()
-		}
 	}
 }

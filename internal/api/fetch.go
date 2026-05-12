@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,30 +9,38 @@ import (
 	"tmail/ent/attachment"
 	"tmail/ent/envelope"
 	"tmail/ent/predicate"
-	"tmail/internal/pubsub"
+
+	"github.com/sunls24/gox"
+	"github.com/sunls24/gox/notifier"
+	"github.com/sunls24/gox/server"
 )
 
-func Fetch(ctx *Context) error {
-	to := ctx.QueryParam("to")
-	if to == "" {
-		return ctx.Bad("not found to address")
+const subAll = "all"
+
+type ReqFetch struct {
+	To    string `query:"to"`
+	Since string `query:"since"`
+}
+
+func Fetch(ctx context.Context, req ReqFetch) ([]*ent.Envelope, error) {
+	if req.To == "" {
+		return nil, server.BadParam()
 	}
-	admin := to == ctx.AdminAddress
+	admin := req.To == Config(ctx).AdminAddress
 	since := time.Time{}
 	if !admin {
-		sinceStr := ctx.QueryParam("since")
-		if sinceStr != "" {
-			ts, err := strconv.ParseInt(sinceStr, 10, 64)
+		if req.Since != "" {
+			ts, err := strconv.ParseInt(req.Since, 10, 64)
 			if err == nil && ts >= 0 {
 				since = time.Unix(ts, 0)
 			}
 		}
 	}
-	query := ctx.ent.Envelope.Query().
+	query := DB(ctx).Envelope.Query().
 		Select(envelope.FieldID, envelope.FieldTo, envelope.FieldFrom, envelope.FieldSubject, envelope.FieldCreatedAt).
 		Order(ent.Desc(envelope.FieldID))
 	if !admin {
-		wheres := []predicate.Envelope{envelope.To(to)}
+		wheres := []predicate.Envelope{envelope.To(req.To)}
 		if !since.IsZero() {
 			wheres = append(wheres, envelope.CreatedAtGTE(since))
 		}
@@ -39,11 +48,11 @@ func Fetch(ctx *Context) error {
 	} else {
 		query.Limit(100)
 	}
-	list, err := query.All(ctx.Request().Context())
+	list, err := query.All(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return ctx.JSON(http.StatusOK, list)
+	return list, nil
 }
 
 type MailDetail struct {
@@ -56,89 +65,99 @@ type AttachmentDetail struct {
 	Filename string `json:"filename"`
 }
 
-func FetchDetail(ctx *Context) error {
-	idStr := ctx.Param("id")
-	if idStr == "" {
-		return ctx.Bad("not found id param")
-	}
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return ctx.Bad("invalid id param: " + idStr)
-	}
-	e, err := ctx.ent.Envelope.Query().
-		Select(envelope.FieldContent).
-		Where(envelope.ID(id)).
-		Only(ctx.Request().Context())
-	if ent.IsNotFound(err) {
-		return ctx.Badf("envelope %d not found", id)
-	}
-	if err != nil {
-		return err
-	}
-	dbAttachments, _ := e.QueryAttachments().All(ctx.Request().Context())
-	attachments := make([]AttachmentDetail, 0, len(dbAttachments))
-	for _, a := range dbAttachments {
-		attachments = append(attachments, AttachmentDetail{
-			ID:       a.ID,
-			Filename: a.Filename,
-		})
-	}
-
-	return ctx.JSON(http.StatusOK, MailDetail{
-		Content:     e.Content,
-		Attachments: attachments,
-	})
+type ReqFetchDetail struct {
+	ID int `param:"id"`
 }
 
-func FetchLatest(ctx *Context) error {
-	to := ctx.QueryParam("to")
-	if to == "" {
-		return ctx.Bad("not found to address")
+func FetchDetail(ctx context.Context, req ReqFetchDetail) (*MailDetail, error) {
+	e, err := DB(ctx).Envelope.Query().
+		Select(envelope.FieldContent).
+		Where(envelope.ID(req.ID)).
+		Only(ctx)
+	if ent.IsNotFound(err) {
+		return nil, server.ErrMsgf("envelope %d not found", req.ID)
 	}
-	admin := to == ctx.AdminAddress
-	if !admin {
-		idStr := ctx.QueryParam("id")
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			return ctx.Bad("invalid id param: " + idStr)
+	if err != nil {
+		return nil, err
+	}
+	dbAttachments, err := e.QueryAttachments().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	attachments := gox.Map(dbAttachments, func(a *ent.Attachment) AttachmentDetail {
+		return AttachmentDetail{
+			ID:       a.ID,
+			Filename: a.Filename,
 		}
-		e, err := ctx.ent.Envelope.Query().
+	})
+
+	return &MailDetail{
+		Content:     e.Content,
+		Attachments: attachments,
+	}, nil
+}
+
+type ReqFetchLatest struct {
+	To string `query:"to"`
+	ID string `query:"id"`
+}
+
+func FetchLatest(ctx context.Context, req ReqFetchLatest) (*server.Reply, error) {
+	if req.To == "" {
+		return nil, server.BadParam()
+	}
+	to := req.To
+	admin := to == Config(ctx).AdminAddress
+	if !admin {
+		id, err := strconv.Atoi(req.ID)
+		if err != nil {
+			return nil, server.BadParam()
+		}
+		e, err := DB(ctx).Envelope.Query().
 			Select(envelope.FieldID, envelope.FieldTo, envelope.FieldFrom, envelope.FieldSubject, envelope.FieldCreatedAt).
 			Where(envelope.IDGT(id), envelope.To(to)).
 			Order(ent.Asc(envelope.FieldID)).
-			First(ctx.Request().Context())
+			First(ctx)
 		if err == nil {
-			return ctx.JSON(http.StatusOK, e)
+			return server.OK(e), nil
 		}
 		if !ent.IsNotFound(err) {
-			return err
+			return nil, err
 		}
 	} else {
-		to = pubsub.SubAll
+		to = subAll
 	}
 
-	ch, cancel := pubsub.Subscribe(to)
+	ch, cancel := notifier.Wait(to)
 	defer cancel()
 	select {
-	case e := <-ch:
-		return ctx.JSON(http.StatusOK, e)
+	case v := <-ch:
+		return server.OK(v), nil
 	case <-time.After(time.Minute):
-		return ctx.NoContent(http.StatusNoContent)
-	case <-ctx.Request().Context().Done():
-		return nil
+		return server.StatusCode(http.StatusNoContent), nil
+	case <-ctx.Done():
+		return server.Handled(), nil
 	}
 }
 
-func Download(ctx *Context) error {
-	id := ctx.Param("id")
-	if id == "" {
-		return ctx.Bad("not found id param")
+type ReqDownload struct {
+	ID string `param:"id"`
+}
+
+func Download(ctx context.Context, req ReqDownload) (*server.Reply, error) {
+	if req.ID == "" {
+		return nil, server.BadParam()
 	}
 
-	a, err := ctx.ent.Attachment.Query().Where(attachment.ID(id)).First(ctx.Request().Context())
+	a, err := DB(ctx).Attachment.Query().Where(attachment.ID(req.ID)).First(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return ctx.Attachment(a.Filepath, a.Filename)
+	ec := server.EchoContext(ctx)
+	if err = ec.Attachment(a.Filepath, a.Filename); err != nil {
+		return nil, err
+	}
+
+	return server.Handled(), nil
 }

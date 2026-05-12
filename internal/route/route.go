@@ -1,16 +1,18 @@
 package route
 
 import (
-	"github.com/labstack/echo/v4"
 	"tmail/internal/api"
+
+	"github.com/labstack/echo/v5"
+	"github.com/sunls24/gox/server"
 )
 
 func Register(e *echo.Echo) {
 	g := e.Group("/api")
-	g.POST("/report", api.Wrap(api.Report))
-	g.GET("/fetch", api.Wrap(api.Fetch))
-	g.GET("/fetch/:id", api.Wrap(api.FetchDetail))
-	g.GET("/fetch/latest", api.Wrap(api.FetchLatest))
-	g.GET("/download/:id", api.Wrap(api.Download))
-	g.GET("/domain", api.Wrap(api.DomainList))
+	g.POST("/report", server.WrapReplyResp(api.Report))
+	g.GET("/fetch", server.Wrap(api.Fetch))
+	g.GET("/fetch/latest", server.WrapReply(api.FetchLatest))
+	g.GET("/fetch/:id", server.Wrap(api.FetchDetail))
+	g.GET("/download/:id", server.WrapReply(api.Download))
+	g.GET("/domain", server.WrapResp(api.DomainList))
 }

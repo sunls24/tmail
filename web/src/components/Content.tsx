@@ -6,7 +6,14 @@ import { type language, useTranslations } from "@/i18n/ui.ts"
 import { ABORT_SAFE } from "@/lib/constant.ts"
 import { $address, initStore } from "@/lib/store/store.ts"
 import type { Envelope } from "@/lib/types.ts"
-import { fetchError, fmtDate, fmtFrom, fmtString } from "@/lib/utils.ts"
+import {
+  apiFetch,
+  fetchError,
+  fmtDate,
+  fmtFrom,
+  fmtString,
+  unwrapApi,
+} from "@/lib/utils.ts"
 import { useStore } from "@nanostores/react"
 import { clsx } from "clsx"
 import {
@@ -30,9 +37,8 @@ function Content({ lang }: { lang: string }) {
   const t = useMemo(() => useTranslations(lang as language), [])
 
   useEffect(() => {
-    fetch("/api/domain")
-      .then((res) => res.json())
-      .then((res) => initStore(res))
+    apiFetch<string[]>("/api/domain")
+      .then((domainList) => initStore(domainList))
       .catch(fetchError)
 
     return () => controller.current?.abort(ABORT_SAFE)
@@ -62,14 +68,9 @@ function Content({ lang }: { lang: string }) {
   }, [address])
 
   async function fetchAll() {
-    const res = await fetch("/api/fetch?to=" + address, {
+    const list = await apiFetch<Envelope[]>("/api/fetch?to=" + address, {
       signal: controller.current!.signal,
     })
-    if (!res.ok) {
-      toast.error((await res.json()).message)
-      return
-    }
-    const list = await res.json()
     setEnvelopes(list)
     setLatestId(list.length > 0 ? list[0].id : 0)
   }
@@ -80,14 +81,14 @@ function Content({ lang }: { lang: string }) {
     })
     if (!res.ok) {
       setTimeout(() => fetchLatest().catch(fetchError), 1000)
-      toast.error((await res.json()).message)
+      await unwrapApi<Envelope>(res)
       return
     }
     if (res.status === 204) {
       setTimeout(() => fetchLatest().catch(fetchError))
       return
     }
-    const e = await res.json()
+    const e = await unwrapApi<Envelope>(res)
     e.animate = true
     setEnvelopes([e, ...envelopes])
     setLatestId(e.id)

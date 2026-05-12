@@ -1,7 +1,7 @@
 package api
 
-import "net/http"
+import "context"
 
-func DomainList(ctx *Context) error {
-	return ctx.JSON(http.StatusOK, ctx.DomainList)
+func DomainList(ctx context.Context) ([]string, error) {
+	return Config(ctx).DomainList, nil
 }

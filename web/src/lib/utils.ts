@@ -16,6 +16,44 @@ export function fmtFrom(str: string) {
   return match ? match[1].replace(/^"|"$/g, "") : str
 }
 
+type ApiEnvelope<T> = {
+  code: number
+  message: string
+  data?: T
+}
+
+async function readBody<T>(res: Response) {
+  const text = await res.text()
+  if (!text) {
+    return undefined
+  }
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    throw new Error(text)
+  }
+}
+
+export async function unwrapApi<T>(res: Response) {
+  if (res.status === 204) {
+    return undefined as T
+  }
+
+  const body = await readBody<ApiEnvelope<T>>(res)
+  if (!res.ok) {
+    throw new Error(body?.message || res.statusText)
+  }
+  if (body?.code !== 0) {
+    throw new Error(body?.message || "request failed")
+  }
+
+  return body.data as T
+}
+
+export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit) {
+  return unwrapApi<T>(await fetch(input, init))
+}
+
 function randomStr(length: number) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
   let result = ""

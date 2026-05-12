@@ -1,38 +1,28 @@
 package api
 
 import (
-	"fmt"
-	"github.com/labstack/echo/v4"
-	"net/http"
+	"context"
 	"tmail/config"
 	"tmail/ent"
+
+	"github.com/sunls24/gox/server"
 )
 
-type Context struct {
-	echo.Context
-	*config.Config
-	ent *ent.Client
+type (
+	dbKey     struct{}
+	configKey struct{}
+)
+
+func ServerContext(srv *server.Server, cfg *config.Config, db *ent.Client) context.Context {
+	srv.ContextValue(dbKey{}, db)
+	srv.ContextValue(configKey{}, cfg)
+	return srv.NewValueContext()
 }
 
-func Middleware(client *ent.Client, cfg *config.Config) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			return next(&Context{c, cfg, client})
-		}
-	}
+func Config(ctx context.Context) *config.Config {
+	return ctx.Value(configKey{}).(*config.Config)
 }
 
-func Wrap(fn func(*Context) error) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		return fn(c.(*Context))
-	}
-}
-
-func (c *Context) Bad(msg string) error {
-	return echo.NewHTTPError(http.StatusBadRequest, msg)
-}
-
-//goland:noinspection SpellCheckingInspection
-func (c *Context) Badf(f string, args ...any) error {
-	return c.Bad(fmt.Sprintf(f, args...))
+func DB(ctx context.Context) *ent.Client {
+	return ctx.Value(dbKey{}).(*ent.Client)
 }
