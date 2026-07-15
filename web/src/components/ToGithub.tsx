@@ -1,7 +1,6 @@
-import React from "react"
 import { GITHUB_URL, VERSION } from "@/lib/constant.ts"
 import { Button } from "@/components/ui/button.tsx"
-import { Github } from "lucide-react"
+import { GitFork } from "lucide-react"
 
 function ToGithub() {
   return (
@@ -10,7 +9,7 @@ function ToGithub() {
       variant="ghost"
       className="gap-1 underline underline-offset-4 has-[>svg]:px-2"
     >
-      <Github />
+      <GitFork data-icon="inline-start" />
       {VERSION}
     </Button>
   )

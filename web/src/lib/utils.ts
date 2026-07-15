@@ -50,7 +50,10 @@ export async function unwrapApi<T>(res: Response) {
   return body.data as T
 }
 
-export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit) {
+export async function apiFetch<T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+) {
   return unwrapApi<T>(await fetch(input, init))
 }
 

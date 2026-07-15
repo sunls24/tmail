@@ -8,7 +8,7 @@ RUN bun install --frozen-lockfile
 COPY ./web .
 RUN bunx astro telemetry disable && bun run build
 
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine AS builder
 WORKDIR /app
 ARG TARGETOS
 ARG TARGETARCH

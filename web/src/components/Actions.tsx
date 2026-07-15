@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import { useMemo } from "react"
 import { Button } from "@/components/ui/button.tsx"
 import { Dices, FilePenLine, GalleryVerticalEnd } from "lucide-react"
 import { $address, $domainList, updateAddress } from "@/lib/store/store.ts"
@@ -29,17 +29,17 @@ function Actions({ lang, className }: { lang: string; className?: string }) {
     >
       <EditAddress lang={lang}>
         <Button>
-          <FilePenLine />
+          <FilePenLine data-icon="inline-start" />
           {t("edit")}
         </Button>
       </EditAddress>
       <Button variant="outline" onClick={onRandom}>
-        <Dices />
+        <Dices data-icon="inline-start" />
         {t("random")}
       </Button>
       <History lang={lang}>
         <Button variant="outline">
-          <GalleryVerticalEnd />
+          <GalleryVerticalEnd data-icon="inline-start" />
           {t("history")}
         </Button>
       </History>
