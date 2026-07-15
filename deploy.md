@@ -40,6 +40,20 @@
 - `ADMIN_ADDRESS`: 管理员邮箱地址，可以查看所有邮件 (默认返回最新100条)
 - `HOST`: 服务监听地址，默认为`127.0.0.1`
 - `PORT`: 服务监听端口，默认为`3000`
+- `TURNSTILE_SITE_KEY`: Cloudflare Turnstile Site Key
+- `TURNSTILE_SECRET_KEY`: Cloudflare Turnstile Secret Key
+- `TURNSTILE_COOKIE_TTL`: 启用人机验证时的 Cookie 有效时间，默认为`6h`
+- `DEBUG`: 本地 HTTP 调试时设置为`true`，生产环境不要开启
+
+`TURNSTILE_SITE_KEY` 和 `TURNSTILE_SECRET_KEY` 必须同时设置；两者都不设置时关闭人机验证。
+
+本地开发可以使用 Cloudflare 官方测试密钥：
+
+```text
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+DEBUG=true
+```
 
 ## 部署
 
@@ -48,7 +62,7 @@ _请修改其中的环境变量配置_
 ### Docker
 
 ```shell
-docker run --name tmail -d --restart unless-stopped -e 'DB_HOST=127.0.0.1' -e 'DB_PASS=postgres' -e 'HOST=0.0.0.0' -e 'DOMAIN_LIST=isco.eu.org,chato.eu.org' -p 3000:3000 sunls24/tmail:latest
+docker run --name tmail -d --restart unless-stopped -e 'DB_HOST=127.0.0.1' -e 'DB_PASS=postgres' -e 'HOST=0.0.0.0' -e 'DOMAIN_LIST=isco.eu.org,chato.eu.org' -e 'TURNSTILE_SITE_KEY=your-site-key' -e 'TURNSTILE_SECRET_KEY=your-secret-key' -p 3000:3000 sunls24/tmail:latest
 ```
 
 ### Docker Compose & Caddy (推荐)
@@ -70,6 +84,8 @@ services:
       - "DB_HOST=127.0.0.1"
       - "DB_PASS=postgres"
       - "DOMAIN_LIST=isco.eu.org,chato.eu.org"
+      - "TURNSTILE_SITE_KEY=your-site-key"
+      - "TURNSTILE_SECRET_KEY=your-secret-key"
     volumes:
       - ./tmail:/app/fs
 ```

@@ -25,6 +25,9 @@ func Report(ctx context.Context) (*server.Reply, error) {
 	}
 	subject := envelope.GetHeader("subject")
 	from := envelope.GetHeader("from")
+	if from == "" {
+		return server.OK(nil), nil
+	}
 	content := envelope.HTML
 	if content == "" {
 		content = envelope.Text

@@ -1,3 +1,8 @@
 .*
 dist
 node_modules
+Dockerfile
+LICENSE
+README*
+deploy.md
+doc

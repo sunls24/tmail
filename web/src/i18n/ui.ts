@@ -31,6 +31,8 @@ const ui = {
     cancel: "Cancel",
     confirm: "Confirm",
     receiveNew: "Received new mail from {0}",
+    verificationInProgress: "Security verification in progress. Please wait…",
+    retry: "Retry",
   },
   zh: {
     pageTitle: "临时邮箱 - 匿名的一次性邮箱",
@@ -56,6 +58,8 @@ const ui = {
     cancel: "取消",
     confirm: "确认",
     receiveNew: "收到来自 {0} 的新邮件",
+    verificationInProgress: "正在进行安全验证，请稍候…",
+    retry: "重试",
   },
 }
 

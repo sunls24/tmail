@@ -43,8 +43,29 @@ import "@/style/global.css"
     <title>{t("pageTitle")}</title>
   </head>
   <body class="flex flex-col">
-    <slot />
-    <Toaster position="top-right" richColors={true} client:load />
+    <div
+      id="turnstileGate"
+      class="bg-background fixed inset-0 z-50 flex items-center justify-center px-2"
+    >
+      <div class="flex w-full max-w-sm flex-col items-center gap-4 text-center">
+        <img alt="" src="/favicon.svg" class="h-8 w-8" />
+        <p class="text-muted-foreground">
+          {t("verificationInProgress")}
+        </p>
+        <div id="turnstileWidget" class="min-h-16 w-full max-w-[300px]"></div>
+        <button
+          id="turnstileRetry"
+          type="button"
+          class="bg-primary text-primary-foreground hover:bg-primary/90 hidden h-9 rounded-md px-4 text-sm font-medium"
+        >
+          {t("retry")}
+        </button>
+      </div>
+    </div>
+    <div id="appShell" class="contents" aria-hidden="true" inert>
+      <slot />
+      <Toaster position="top-right" richColors={true} client:load />
+    </div>
   </body>
 </html>
 
@@ -54,6 +75,14 @@ import "@/style/global.css"
     margin: 0;
     width: 100%;
     height: 100%;
+  }
+
+  body:not([data-turnstile-verified]) #appShell {
+    visibility: hidden;
+  }
+
+  body[data-turnstile-verified] #turnstileGate {
+    display: none;
   }
 </style>
 
@@ -66,4 +95,84 @@ import "@/style/global.css"
   document.documentElement.classList[theme === "dark" ? "add" : "remove"](
     "dark"
   )
+</script>
+
+<script is:inline>
+  const appShell = document.getElementById("appShell")
+  const retry = document.getElementById("turnstileRetry")
+  const widget = document.getElementById("turnstileWidget")
+
+  retry.addEventListener("click", () => window.location.reload())
+
+  function showFailure() {
+    retry.classList.remove("hidden")
+  }
+
+  function revealApp() {
+    document.body.setAttribute("data-turnstile-verified", "")
+    appShell.removeAttribute("inert")
+    appShell.setAttribute("aria-hidden", "false")
+  }
+
+  function loadTurnstile() {
+    return new Promise((resolve, reject) => {
+      if (window.turnstile) {
+        resolve()
+        return
+      }
+      const script = document.createElement("script")
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      script.onload = resolve
+      script.onerror = reject
+      document.head.appendChild(script)
+    })
+  }
+
+  async function verifyToken(token, widgetId) {
+    const response = await fetch("/api/turnstile/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    })
+    const body = await response.json()
+    if (!response.ok || body.code !== 0) {
+      window.turnstile.reset(widgetId)
+      throw new Error(body.message || response.statusText)
+    }
+    window.location.reload()
+  }
+
+  async function startVerification(siteKey) {
+    await loadTurnstile()
+    let widgetId
+    widgetId = window.turnstile.render(widget, {
+      sitekey: siteKey,
+      size: "normal",
+      theme: document.documentElement.classList.contains("dark")
+        ? "dark"
+        : "light",
+      language: document.documentElement.lang,
+      callback: (token) => verifyToken(token, widgetId).catch(showFailure),
+      "error-callback": showFailure,
+      "expired-callback": () => window.turnstile.reset(widgetId),
+    })
+  }
+
+  async function checkVerification() {
+    const response = await fetch("/api/turnstile/status", {
+      cache: "no-store",
+    })
+    const body = await response.json()
+    if (!response.ok || body.code !== 0) {
+      throw new Error(body.message || response.statusText)
+    }
+    if (!body.data.enabled || body.data.verified) {
+      revealApp()
+      return
+    }
+    await startVerification(body.data.site_key)
+  }
+
+  checkVerification().catch(showFailure)
 </script>

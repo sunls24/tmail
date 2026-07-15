@@ -39,6 +39,9 @@ func (app App) Run() error {
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
+	if !cfg.TurnstileEnabled() {
+		log.Warn().Msg("Turnstile verification is disabled")
+	}
 
 	client, err := ent.New(cfg.DB)
 	if err != nil {
@@ -51,7 +54,7 @@ func (app App) Run() error {
 		ctx := api.ServerContext(srv, cfg, client)
 		schedule.New(ctx).Run()
 
-		route.Register(srv.Echo)
+		route.Register(srv.Echo, cfg)
 		srv.Echo.StaticFS("/", echo.MustSubFS(web.FS, "dist"))
 	})
 }

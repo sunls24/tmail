@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v5 v5.1.1
 	github.com/lib/pq v1.12.3
 	github.com/rs/zerolog v1.35.0
-	github.com/sunls24/gox v0.0.0-20260506152545-6b7d03b142b9
+	github.com/sunls24/gox v0.0.0-20260516115006-1c74a7f79674
 )
 
 require (

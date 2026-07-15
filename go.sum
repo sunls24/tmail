@@ -80,8 +80,8 @@ github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf h1:pvbZ0lM0XWPBqUKqFU8cma
 github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf/go.mod h1:RJID2RhlZKId02nZ62WenDCkgHFerpIOmW0iT7GKmXM=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/sunls24/gox v0.0.0-20260506152545-6b7d03b142b9 h1:A+dXVJeSbiyQrQAgei7+0iJNjVsXayOxFs1yQyHd7l4=
-github.com/sunls24/gox v0.0.0-20260506152545-6b7d03b142b9/go.mod h1:SXIwHaN3NAJSNGdmxlU/tHY++MfAXkqZSZzPzciUC8M=
+github.com/sunls24/gox v0.0.0-20260516115006-1c74a7f79674 h1:CV+XZh+9h6bK9CB/UJ5BeGvC9EfPfbukxeWkL4ND+bQ=
+github.com/sunls24/gox v0.0.0-20260516115006-1c74a7f79674/go.mod h1:SXIwHaN3NAJSNGdmxlU/tHY++MfAXkqZSZzPzciUC8M=
 github.com/zclconf/go-cty v1.18.0 h1:pJ8+HNI4gFoyRNqVE37wWbJWVw43BZczFo7KUoRczaA=
 github.com/zclconf/go-cty v1.18.0/go.mod h1:qpnV6EDNgC1sns/AleL1fvatHw72j+S+nS+MJ+T2CSg=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940 h1:4r45xpDWB6ZMSMNJFMOjqrGHynW3DIBuR2H9j0ug+Mo=
