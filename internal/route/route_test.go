@@ -81,6 +81,21 @@ func TestTurnstileProtection(t *testing.T) {
 		domain := request(t, srv, http.MethodGet, "/api/domain")
 		assertStatus(t, domain, http.StatusUnauthorized)
 	})
+
+	t.Run("api key", func(t *testing.T) {
+		cfg := &config.Config{
+			APIKey:             "test-api-key",
+			TurnstileSiteKey:   "test-site-key",
+			TurnstileSecretKey: "test-secret-key",
+		}
+		srv := newTestServer(cfg)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/domain", nil)
+		req.Header.Set("X-API-Key", "test-api-key")
+		recorder := httptest.NewRecorder()
+		srv.Echo.ServeHTTP(recorder, req)
+		assertStatus(t, recorder, http.StatusOK)
+	})
 }
 
 func assertRoute(t *testing.T, e *echo.Echo, method, path string, exists bool) {

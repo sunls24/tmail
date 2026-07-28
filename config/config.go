@@ -15,6 +15,7 @@ type Config struct {
 	BaseDir      string   `env:"BASE_DIR" envDefault:"fs"`
 	DB           Database `envPrefix:"DB_"`
 	Debug        bool     `env:"DEBUG"`
+	APIKey       string   `env:"API_KEY"`
 
 	TurnstileSiteKey   string        `env:"TURNSTILE_SITE_KEY"`
 	TurnstileSecretKey string        `env:"TURNSTILE_SECRET_KEY"`

@@ -40,6 +40,7 @@
 - `ADMIN_ADDRESS`: 管理员邮箱地址，可以查看所有邮件 (默认返回最新100条)
 - `HOST`: 服务监听地址，默认为`127.0.0.1`
 - `PORT`: 服务监听端口，默认为`3000`
+- `API_KEY`: API 调用密钥；启用人机验证时，可通过 `X-API-Key` 请求头跳过验证
 - `TURNSTILE_SITE_KEY`: Cloudflare Turnstile Site Key
 - `TURNSTILE_SECRET_KEY`: Cloudflare Turnstile Secret Key
 - `TURNSTILE_COOKIE_TTL`: 启用人机验证时的 Cookie 有效时间，默认为`6h`

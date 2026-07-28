@@ -29,6 +29,9 @@ func Register(e *echo.Echo, cfg *config.Config) {
 func requireTurnstile(cfg *config.Config) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
+			if cfg.APIKey != "" && c.Request().Header.Get("X-API-Key") == cfg.APIKey {
+				return next(c)
+			}
 			if !api.TurnstileVerified(c.Request(), cfg) {
 				return c.JSON(http.StatusUnauthorized, server.Envelope{
 					Code:    -1,
