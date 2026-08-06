@@ -263,8 +263,8 @@ func (c *AttachmentClient) Update() *AttachmentUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *AttachmentClient) UpdateOne(a *Attachment) *AttachmentUpdateOne {
-	mutation := newAttachmentMutation(c.config, OpUpdateOne, withAttachment(a))
+func (c *AttachmentClient) UpdateOne(_m *Attachment) *AttachmentUpdateOne {
+	mutation := newAttachmentMutation(c.config, OpUpdateOne, withAttachment(_m))
 	return &AttachmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -281,8 +281,8 @@ func (c *AttachmentClient) Delete() *AttachmentDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *AttachmentClient) DeleteOne(a *Attachment) *AttachmentDeleteOne {
-	return c.DeleteOneID(a.ID)
+func (c *AttachmentClient) DeleteOne(_m *Attachment) *AttachmentDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -317,16 +317,16 @@ func (c *AttachmentClient) GetX(ctx context.Context, id string) *Attachment {
 }
 
 // QueryOwner queries the owner edge of a Attachment.
-func (c *AttachmentClient) QueryOwner(a *Attachment) *EnvelopeQuery {
+func (c *AttachmentClient) QueryOwner(_m *Attachment) *EnvelopeQuery {
 	query := (&EnvelopeClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := a.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(attachment.Table, attachment.FieldID, id),
 			sqlgraph.To(envelope.Table, envelope.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, attachment.OwnerTable, attachment.OwnerColumn),
 		)
-		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
@@ -412,8 +412,8 @@ func (c *EnvelopeClient) Update() *EnvelopeUpdate {
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *EnvelopeClient) UpdateOne(e *Envelope) *EnvelopeUpdateOne {
-	mutation := newEnvelopeMutation(c.config, OpUpdateOne, withEnvelope(e))
+func (c *EnvelopeClient) UpdateOne(_m *Envelope) *EnvelopeUpdateOne {
+	mutation := newEnvelopeMutation(c.config, OpUpdateOne, withEnvelope(_m))
 	return &EnvelopeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
@@ -430,8 +430,8 @@ func (c *EnvelopeClient) Delete() *EnvelopeDelete {
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *EnvelopeClient) DeleteOne(e *Envelope) *EnvelopeDeleteOne {
-	return c.DeleteOneID(e.ID)
+func (c *EnvelopeClient) DeleteOne(_m *Envelope) *EnvelopeDeleteOne {
+	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
@@ -466,16 +466,16 @@ func (c *EnvelopeClient) GetX(ctx context.Context, id int) *Envelope {
 }
 
 // QueryAttachments queries the attachments edge of a Envelope.
-func (c *EnvelopeClient) QueryAttachments(e *Envelope) *AttachmentQuery {
+func (c *EnvelopeClient) QueryAttachments(_m *Envelope) *AttachmentQuery {
 	query := (&AttachmentClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := e.ID
+		id := _m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(envelope.Table, envelope.FieldID, id),
 			sqlgraph.To(attachment.Table, attachment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, envelope.AttachmentsTable, envelope.AttachmentsColumn),
 		)
-		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query

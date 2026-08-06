@@ -82,16 +82,20 @@ type AttachmentDetail struct {
 }
 
 type ReqFetchDetail struct {
-	ID int `param:"id"`
+	ID int    `param:"id"`
+	To string `query:"to"`
 }
 
 func FetchDetail(ctx context.Context, req ReqFetchDetail) (*MailDetail, error) {
+	if req.To == "" {
+		return nil, server.BadParam()
+	}
 	e, err := DB(ctx).Envelope.Query().
 		Select(envelope.FieldContent).
-		Where(envelope.ID(req.ID)).
+		Where(envelope.ID(req.ID), envelope.To(req.To)).
 		Only(ctx)
 	if ent.IsNotFound(err) {
-		return nil, server.ErrMsgf("envelope %d not found", req.ID)
+		return nil, server.ErrMsg("envelope not found")
 	}
 	if err != nil {
 		return nil, err
@@ -122,26 +126,29 @@ func FetchLatest(ctx context.Context, req ReqFetchLatest) (*server.Reply, error)
 	if req.To == "" {
 		return nil, server.BadParam()
 	}
+	id, err := strconv.Atoi(req.ID)
+	if err != nil {
+		return nil, server.BadParam()
+	}
+
 	to := req.To
 	admin := to == Config(ctx).AdminAddress
+	wheres := []predicate.Envelope{envelope.IDGT(id)}
 	if !admin {
-		id, err := strconv.Atoi(req.ID)
-		if err != nil {
-			return nil, server.BadParam()
-		}
-		e, err := DB(ctx).Envelope.Query().
-			Select(envelope.FieldID, envelope.FieldTo, envelope.FieldFrom, envelope.FieldSubject, envelope.FieldCreatedAt).
-			Where(envelope.IDGT(id), envelope.To(to)).
-			Order(ent.Asc(envelope.FieldID)).
-			First(ctx)
-		if err == nil {
-			return server.OK(e), nil
-		}
-		if !ent.IsNotFound(err) {
-			return nil, err
-		}
+		wheres = append(wheres, envelope.To(to))
 	} else {
 		to = subAll
+	}
+	e, err := DB(ctx).Envelope.Query().
+		Select(envelope.FieldID, envelope.FieldTo, envelope.FieldFrom, envelope.FieldSubject, envelope.FieldCreatedAt).
+		Where(wheres...).
+		Order(ent.Asc(envelope.FieldID)).
+		First(ctx)
+	if err == nil {
+		return server.OK(e), nil
+	}
+	if !ent.IsNotFound(err) {
+		return nil, err
 	}
 
 	ch, cancel := notifier.Wait(to)
@@ -158,14 +165,20 @@ func FetchLatest(ctx context.Context, req ReqFetchLatest) (*server.Reply, error)
 
 type ReqDownload struct {
 	ID string `param:"id"`
+	To string `query:"to"`
 }
 
 func Download(ctx context.Context, req ReqDownload) (*server.Reply, error) {
-	if req.ID == "" {
+	if req.ID == "" || req.To == "" {
 		return nil, server.BadParam()
 	}
 
-	a, err := DB(ctx).Attachment.Query().Where(attachment.ID(req.ID)).First(ctx)
+	a, err := DB(ctx).Attachment.Query().
+		Where(attachment.ID(req.ID), attachment.HasOwnerWith(envelope.To(req.To))).
+		First(ctx)
+	if ent.IsNotFound(err) {
+		return nil, server.ErrMsg("attachment not found")
+	}
 	if err != nil {
 		return nil, err
 	}

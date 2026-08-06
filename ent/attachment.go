@@ -68,7 +68,7 @@ func (*Attachment) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Attachment fields.
-func (a *Attachment) assignValues(columns []string, values []any) error {
+func (_m *Attachment) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -78,35 +78,35 @@ func (a *Attachment) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				a.ID = value.String
+				_m.ID = value.String
 			}
 		case attachment.FieldFilename:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field filename", values[i])
 			} else if value.Valid {
-				a.Filename = value.String
+				_m.Filename = value.String
 			}
 		case attachment.FieldFilepath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field filepath", values[i])
 			} else if value.Valid {
-				a.Filepath = value.String
+				_m.Filepath = value.String
 			}
 		case attachment.FieldContentType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field contentType", values[i])
 			} else if value.Valid {
-				a.ContentType = value.String
+				_m.ContentType = value.String
 			}
 		case attachment.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field envelope_attachments", value)
 			} else if value.Valid {
-				a.envelope_attachments = new(int)
-				*a.envelope_attachments = int(value.Int64)
+				_m.envelope_attachments = new(int)
+				*_m.envelope_attachments = int(value.Int64)
 			}
 		default:
-			a.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -114,46 +114,46 @@ func (a *Attachment) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Attachment.
 // This includes values selected through modifiers, order, etc.
-func (a *Attachment) Value(name string) (ent.Value, error) {
-	return a.selectValues.Get(name)
+func (_m *Attachment) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryOwner queries the "owner" edge of the Attachment entity.
-func (a *Attachment) QueryOwner() *EnvelopeQuery {
-	return NewAttachmentClient(a.config).QueryOwner(a)
+func (_m *Attachment) QueryOwner() *EnvelopeQuery {
+	return NewAttachmentClient(_m.config).QueryOwner(_m)
 }
 
 // Update returns a builder for updating this Attachment.
 // Note that you need to call Attachment.Unwrap() before calling this method if this Attachment
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (a *Attachment) Update() *AttachmentUpdateOne {
-	return NewAttachmentClient(a.config).UpdateOne(a)
+func (_m *Attachment) Update() *AttachmentUpdateOne {
+	return NewAttachmentClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Attachment entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (a *Attachment) Unwrap() *Attachment {
-	_tx, ok := a.config.driver.(*txDriver)
+func (_m *Attachment) Unwrap() *Attachment {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Attachment is not a transactional entity")
 	}
-	a.config.driver = _tx.drv
-	return a
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (a *Attachment) String() string {
+func (_m *Attachment) String() string {
 	var builder strings.Builder
 	builder.WriteString("Attachment(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("filename=")
-	builder.WriteString(a.Filename)
+	builder.WriteString(_m.Filename)
 	builder.WriteString(", ")
 	builder.WriteString("filepath=")
-	builder.WriteString(a.Filepath)
+	builder.WriteString(_m.Filepath)
 	builder.WriteString(", ")
 	builder.WriteString("contentType=")
-	builder.WriteString(a.ContentType)
+	builder.WriteString(_m.ContentType)
 	builder.WriteByte(')')
 	return builder.String()
 }

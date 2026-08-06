@@ -22,88 +22,88 @@ type EnvelopeCreate struct {
 }
 
 // SetTo sets the "to" field.
-func (ec *EnvelopeCreate) SetTo(s string) *EnvelopeCreate {
-	ec.mutation.SetTo(s)
-	return ec
+func (_c *EnvelopeCreate) SetTo(v string) *EnvelopeCreate {
+	_c.mutation.SetTo(v)
+	return _c
 }
 
 // SetFrom sets the "from" field.
-func (ec *EnvelopeCreate) SetFrom(s string) *EnvelopeCreate {
-	ec.mutation.SetFrom(s)
-	return ec
+func (_c *EnvelopeCreate) SetFrom(v string) *EnvelopeCreate {
+	_c.mutation.SetFrom(v)
+	return _c
 }
 
 // SetSubject sets the "subject" field.
-func (ec *EnvelopeCreate) SetSubject(s string) *EnvelopeCreate {
-	ec.mutation.SetSubject(s)
-	return ec
+func (_c *EnvelopeCreate) SetSubject(v string) *EnvelopeCreate {
+	_c.mutation.SetSubject(v)
+	return _c
 }
 
 // SetNillableSubject sets the "subject" field if the given value is not nil.
-func (ec *EnvelopeCreate) SetNillableSubject(s *string) *EnvelopeCreate {
-	if s != nil {
-		ec.SetSubject(*s)
+func (_c *EnvelopeCreate) SetNillableSubject(v *string) *EnvelopeCreate {
+	if v != nil {
+		_c.SetSubject(*v)
 	}
-	return ec
+	return _c
 }
 
 // SetContent sets the "content" field.
-func (ec *EnvelopeCreate) SetContent(s string) *EnvelopeCreate {
-	ec.mutation.SetContent(s)
-	return ec
+func (_c *EnvelopeCreate) SetContent(v string) *EnvelopeCreate {
+	_c.mutation.SetContent(v)
+	return _c
 }
 
 // SetNillableContent sets the "content" field if the given value is not nil.
-func (ec *EnvelopeCreate) SetNillableContent(s *string) *EnvelopeCreate {
-	if s != nil {
-		ec.SetContent(*s)
+func (_c *EnvelopeCreate) SetNillableContent(v *string) *EnvelopeCreate {
+	if v != nil {
+		_c.SetContent(*v)
 	}
-	return ec
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ec *EnvelopeCreate) SetCreatedAt(t time.Time) *EnvelopeCreate {
-	ec.mutation.SetCreatedAt(t)
-	return ec
+func (_c *EnvelopeCreate) SetCreatedAt(v time.Time) *EnvelopeCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ec *EnvelopeCreate) SetNillableCreatedAt(t *time.Time) *EnvelopeCreate {
-	if t != nil {
-		ec.SetCreatedAt(*t)
+func (_c *EnvelopeCreate) SetNillableCreatedAt(v *time.Time) *EnvelopeCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ec
+	return _c
 }
 
 // AddAttachmentIDs adds the "attachments" edge to the Attachment entity by IDs.
-func (ec *EnvelopeCreate) AddAttachmentIDs(ids ...string) *EnvelopeCreate {
-	ec.mutation.AddAttachmentIDs(ids...)
-	return ec
+func (_c *EnvelopeCreate) AddAttachmentIDs(ids ...string) *EnvelopeCreate {
+	_c.mutation.AddAttachmentIDs(ids...)
+	return _c
 }
 
 // AddAttachments adds the "attachments" edges to the Attachment entity.
-func (ec *EnvelopeCreate) AddAttachments(a ...*Attachment) *EnvelopeCreate {
-	ids := make([]string, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_c *EnvelopeCreate) AddAttachments(v ...*Attachment) *EnvelopeCreate {
+	ids := make([]string, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ec.AddAttachmentIDs(ids...)
+	return _c.AddAttachmentIDs(ids...)
 }
 
 // Mutation returns the EnvelopeMutation object of the builder.
-func (ec *EnvelopeCreate) Mutation() *EnvelopeMutation {
-	return ec.mutation
+func (_c *EnvelopeCreate) Mutation() *EnvelopeMutation {
+	return _c.mutation
 }
 
 // Save creates the Envelope in the database.
-func (ec *EnvelopeCreate) Save(ctx context.Context) (*Envelope, error) {
-	ec.defaults()
-	return withHooks(ctx, ec.sqlSave, ec.mutation, ec.hooks)
+func (_c *EnvelopeCreate) Save(ctx context.Context) (*Envelope, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ec *EnvelopeCreate) SaveX(ctx context.Context) *Envelope {
-	v, err := ec.Save(ctx)
+func (_c *EnvelopeCreate) SaveX(ctx context.Context) *Envelope {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -111,70 +111,70 @@ func (ec *EnvelopeCreate) SaveX(ctx context.Context) *Envelope {
 }
 
 // Exec executes the query.
-func (ec *EnvelopeCreate) Exec(ctx context.Context) error {
-	_, err := ec.Save(ctx)
+func (_c *EnvelopeCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ec *EnvelopeCreate) ExecX(ctx context.Context) {
-	if err := ec.Exec(ctx); err != nil {
+func (_c *EnvelopeCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ec *EnvelopeCreate) defaults() {
-	if _, ok := ec.mutation.Subject(); !ok {
+func (_c *EnvelopeCreate) defaults() {
+	if _, ok := _c.mutation.Subject(); !ok {
 		v := envelope.DefaultSubject
-		ec.mutation.SetSubject(v)
+		_c.mutation.SetSubject(v)
 	}
-	if _, ok := ec.mutation.Content(); !ok {
+	if _, ok := _c.mutation.Content(); !ok {
 		v := envelope.DefaultContent
-		ec.mutation.SetContent(v)
+		_c.mutation.SetContent(v)
 	}
-	if _, ok := ec.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := envelope.DefaultCreatedAt()
-		ec.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ec *EnvelopeCreate) check() error {
-	if _, ok := ec.mutation.To(); !ok {
+func (_c *EnvelopeCreate) check() error {
+	if _, ok := _c.mutation.To(); !ok {
 		return &ValidationError{Name: "to", err: errors.New(`ent: missing required field "Envelope.to"`)}
 	}
-	if v, ok := ec.mutation.To(); ok {
+	if v, ok := _c.mutation.To(); ok {
 		if err := envelope.ToValidator(v); err != nil {
 			return &ValidationError{Name: "to", err: fmt.Errorf(`ent: validator failed for field "Envelope.to": %w`, err)}
 		}
 	}
-	if _, ok := ec.mutation.From(); !ok {
+	if _, ok := _c.mutation.From(); !ok {
 		return &ValidationError{Name: "from", err: errors.New(`ent: missing required field "Envelope.from"`)}
 	}
-	if v, ok := ec.mutation.From(); ok {
+	if v, ok := _c.mutation.From(); ok {
 		if err := envelope.FromValidator(v); err != nil {
 			return &ValidationError{Name: "from", err: fmt.Errorf(`ent: validator failed for field "Envelope.from": %w`, err)}
 		}
 	}
-	if _, ok := ec.mutation.Subject(); !ok {
+	if _, ok := _c.mutation.Subject(); !ok {
 		return &ValidationError{Name: "subject", err: errors.New(`ent: missing required field "Envelope.subject"`)}
 	}
-	if _, ok := ec.mutation.Content(); !ok {
+	if _, ok := _c.mutation.Content(); !ok {
 		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "Envelope.content"`)}
 	}
-	if _, ok := ec.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Envelope.created_at"`)}
 	}
 	return nil
 }
 
-func (ec *EnvelopeCreate) sqlSave(ctx context.Context) (*Envelope, error) {
-	if err := ec.check(); err != nil {
+func (_c *EnvelopeCreate) sqlSave(ctx context.Context) (*Envelope, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ec.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ec.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -182,37 +182,37 @@ func (ec *EnvelopeCreate) sqlSave(ctx context.Context) (*Envelope, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ec.mutation.id = &_node.ID
-	ec.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ec *EnvelopeCreate) createSpec() (*Envelope, *sqlgraph.CreateSpec) {
+func (_c *EnvelopeCreate) createSpec() (*Envelope, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Envelope{config: ec.config}
+		_node = &Envelope{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(envelope.Table, sqlgraph.NewFieldSpec(envelope.FieldID, field.TypeInt))
 	)
-	if value, ok := ec.mutation.To(); ok {
+	if value, ok := _c.mutation.To(); ok {
 		_spec.SetField(envelope.FieldTo, field.TypeString, value)
 		_node.To = value
 	}
-	if value, ok := ec.mutation.From(); ok {
+	if value, ok := _c.mutation.From(); ok {
 		_spec.SetField(envelope.FieldFrom, field.TypeString, value)
 		_node.From = value
 	}
-	if value, ok := ec.mutation.Subject(); ok {
+	if value, ok := _c.mutation.Subject(); ok {
 		_spec.SetField(envelope.FieldSubject, field.TypeString, value)
 		_node.Subject = value
 	}
-	if value, ok := ec.mutation.Content(); ok {
+	if value, ok := _c.mutation.Content(); ok {
 		_spec.SetField(envelope.FieldContent, field.TypeString, value)
 		_node.Content = value
 	}
-	if value, ok := ec.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(envelope.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := ec.mutation.AttachmentsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AttachmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -239,16 +239,16 @@ type EnvelopeCreateBulk struct {
 }
 
 // Save creates the Envelope entities in the database.
-func (ecb *EnvelopeCreateBulk) Save(ctx context.Context) ([]*Envelope, error) {
-	if ecb.err != nil {
-		return nil, ecb.err
+func (_c *EnvelopeCreateBulk) Save(ctx context.Context) ([]*Envelope, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ecb.builders))
-	nodes := make([]*Envelope, len(ecb.builders))
-	mutators := make([]Mutator, len(ecb.builders))
-	for i := range ecb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Envelope, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ecb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*EnvelopeMutation)
@@ -262,11 +262,11 @@ func (ecb *EnvelopeCreateBulk) Save(ctx context.Context) ([]*Envelope, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ecb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ecb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -290,7 +290,7 @@ func (ecb *EnvelopeCreateBulk) Save(ctx context.Context) ([]*Envelope, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ecb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -298,8 +298,8 @@ func (ecb *EnvelopeCreateBulk) Save(ctx context.Context) ([]*Envelope, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ecb *EnvelopeCreateBulk) SaveX(ctx context.Context) []*Envelope {
-	v, err := ecb.Save(ctx)
+func (_c *EnvelopeCreateBulk) SaveX(ctx context.Context) []*Envelope {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -307,14 +307,14 @@ func (ecb *EnvelopeCreateBulk) SaveX(ctx context.Context) []*Envelope {
 }
 
 // Exec executes the query.
-func (ecb *EnvelopeCreateBulk) Exec(ctx context.Context) error {
-	_, err := ecb.Save(ctx)
+func (_c *EnvelopeCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ecb *EnvelopeCreateBulk) ExecX(ctx context.Context) {
-	if err := ecb.Exec(ctx); err != nil {
+func (_c *EnvelopeCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

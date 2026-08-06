@@ -1,27 +1,28 @@
 import React, { useState } from "react"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 
 import { Input } from "@/components/ui/input.tsx"
+import { Button } from "@/components/ui/button.tsx"
 import { useStore } from "@nanostores/react"
 import { $address, $domainList, updateAddress } from "@/lib/store/store.ts"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 import { MessageCircleWarning } from "lucide-react"
 import { type language, useTranslations } from "@/i18n/ui"
 
@@ -29,15 +30,19 @@ function EditAddress({
   children,
   lang,
 }: {
-  children: React.ReactNode
+  children: React.ReactElement
   lang: string
 }) {
   const [address, setAddress] = useState("")
   const domainList = useStore($domainList)
+  const domains = domainList.map((value) => ({ label: value, value }))
 
   const t = useTranslations(lang as language)
 
-  function onDomainChange(value: string) {
+  function onDomainChange(value: string | null) {
+    if (!value) {
+      return
+    }
     setAddress(`${address!.split("@")[0]}@${value}`)
   }
 
@@ -60,20 +65,20 @@ function EditAddress({
       return
     }
     updateAddress(address)
-    toast.success(t("changeNew") + " " + address)
+    toast.add({ title: t("changeNew") + " " + address, type: "success" })
   }
 
   return (
-    <AlertDialog onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("edit")}</AlertDialogTitle>
-          <AlertDialogDescription className="flex items-center justify-center gap-1 sm:justify-start">
+    <Dialog onOpenChange={onOpenChange}>
+      <DialogTrigger render={children} />
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("edit")}</DialogTitle>
+          <DialogDescription className="flex items-center justify-center gap-1 sm:justify-start">
             <MessageCircleWarning size={20} strokeWidth={1.8} />
             {t("editWarn")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
         <div className="flex items-center justify-center sm:justify-start">
           <Input
             className="w-32 text-right"
@@ -81,27 +86,35 @@ function EditAddress({
             onChange={(e) => onInputChange(e.currentTarget.value)}
           />
           <span className="bg-secondary mx-1 rounded-sm p-1">@</span>
-          <Select value={address?.split("@")[1]} onValueChange={onDomainChange}>
+          <Select
+            items={domains}
+            value={address?.split("@")[1]}
+            onValueChange={onDomainChange}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {domainList.map((v) => (
-                <SelectItem key={v} value={v}>
-                  {v}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                {domains.map(({ label, value }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>
+            {t("cancel")}
+          </DialogClose>
+          <DialogClose render={<Button />} onClick={onConfirm}>
             {t("confirm")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

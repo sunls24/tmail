@@ -1,7 +1,5 @@
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ABORT_SAFE } from "@/lib/constant.ts"
-import { toast } from "sonner"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -68,13 +66,6 @@ function randomStr(length: number) {
 
 export function randomAddress(domain: string) {
   return `${randomStr(8)}@${domain}`
-}
-
-export function fetchError(e: any) {
-  if (e === ABORT_SAFE || e.name === "AbortError") {
-    return
-  }
-  toast.error(e.message ?? e)
 }
 
 export function fmtString(template: string, ...values: any[]) {

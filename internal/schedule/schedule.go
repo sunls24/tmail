@@ -3,14 +3,15 @@ package schedule
 import (
 	"context"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
+	"tmail/ent"
 	"tmail/ent/attachment"
 	"tmail/ent/envelope"
 	"tmail/internal/api"
 
-	"github.com/rs/zerolog/log"
 	"github.com/sunls24/gox"
 	"github.com/sunls24/gox/cron"
 )
@@ -18,6 +19,8 @@ import (
 type Scheduler struct {
 	ctx context.Context
 }
+
+const cleanUpBatchSize = 500
 
 func New(ctx context.Context) *Scheduler {
 	return &Scheduler{ctx: ctx}
@@ -29,35 +32,98 @@ func (s *Scheduler) Run() {
 
 func (s *Scheduler) cleanUpExpired() {
 	cron.RunRepeat(func() {
-		gox.SafeGo(func() {
-			removeEmptyDir(api.Config(s.ctx).BaseDir)
-		})
+		defer removeEmptyDir(api.Config(s.ctx).BaseDir)
 		expired := time.Now().Add(-time.Hour * 240)
-		list, err := api.DB(s.ctx).Attachment.Query().Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).All(context.Background())
+		attachmentCount, err := cleanUpAttachments(s.ctx, expired)
 		if err != nil {
-			log.Err(err).Msg("Attachment Query")
+			slog.Error("Attachment cleanup", "err", err)
 			return
 		}
-		for _, a := range list {
-			_ = os.Remove(a.Filepath)
+		if attachmentCount > 0 {
+			slog.Info("clean up attachment", "count", attachmentCount)
 		}
-		count, err := api.DB(s.ctx).Attachment.Delete().Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).Exec(context.Background())
+
+		envelopeCount, err := cleanUpEnvelopes(s.ctx, expired)
 		if err != nil {
-			log.Err(err).Msg("Attachment Delete")
+			slog.Error("Envelope cleanup", "err", err)
 			return
 		}
-		if count > 0 {
-			log.Info().Msgf("clean up attachment %d", count)
-		}
-		count, err = api.DB(s.ctx).Envelope.Delete().Where(envelope.CreatedAtLT(expired)).Exec(context.Background())
-		if err != nil {
-			log.Err(err).Msg("Envelope Delete")
-			return
-		}
-		if count > 0 {
-			log.Info().Msgf("clean up expired %d", count)
+		if envelopeCount > 0 {
+			slog.Info("clean up expired", "count", envelopeCount)
 		}
 	}, time.Hour*24)
+}
+
+func cleanUpAttachments(ctx context.Context, expired time.Time) (int, error) {
+	queryCtx := context.Background()
+	cursor := ""
+	total := 0
+	for {
+		query := api.DB(ctx).Attachment.Query().
+			Where(attachment.HasOwnerWith(envelope.CreatedAtLT(expired))).
+			Order(ent.Asc(attachment.FieldID)).
+			Limit(cleanUpBatchSize)
+		if cursor != "" {
+			query.Where(attachment.IDGT(cursor))
+		}
+		list, err := query.All(queryCtx)
+		if err != nil {
+			return total, err
+		}
+		if len(list) == 0 {
+			return total, nil
+		}
+		cursor = list[len(list)-1].ID
+
+		ids := make([]string, 0, len(list))
+		for _, a := range list {
+			err = os.Remove(a.Filepath)
+			if err == nil || os.IsNotExist(err) {
+				ids = append(ids, a.ID)
+				continue
+			}
+			slog.Error("Attachment remove", "id", a.ID, "filepath", a.Filepath, "err", err)
+		}
+		if len(ids) > 0 {
+			count, err := api.DB(ctx).Attachment.Delete().
+				Where(attachment.IDIn(ids...)).
+				Exec(queryCtx)
+			if err != nil {
+				return total, err
+			}
+			total += count
+		}
+	}
+}
+
+func cleanUpEnvelopes(ctx context.Context, expired time.Time) (int, error) {
+	queryCtx := context.Background()
+	total := 0
+	for {
+		list, err := api.DB(ctx).Envelope.Query().
+			Select(envelope.FieldID).
+			Where(envelope.CreatedAtLT(expired), envelope.Not(envelope.HasAttachments())).
+			Limit(cleanUpBatchSize).
+			All(queryCtx)
+		if err != nil {
+			return total, err
+		}
+		if len(list) == 0 {
+			return total, nil
+		}
+
+		ids := make([]int, 0, len(list))
+		for _, e := range list {
+			ids = append(ids, e.ID)
+		}
+		count, err := api.DB(ctx).Envelope.Delete().
+			Where(envelope.IDIn(ids...)).
+			Exec(queryCtx)
+		if err != nil {
+			return total, err
+		}
+		total += count
+	}
 }
 
 func removeEmptyDir(baseDir string) {
@@ -81,6 +147,6 @@ func removeEmptyDir(baseDir string) {
 		return nil
 	})
 	if err != nil {
-		log.Err(err).Msg("removeEmptyDir")
+		slog.Error("removeEmptyDir", "err", err)
 	}
 }

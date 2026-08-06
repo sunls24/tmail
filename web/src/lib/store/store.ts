@@ -33,11 +33,6 @@ export function updateAddress(address: string) {
   if (!current) {
     return
   }
-  const history = $history.get()
-  const index = history.indexOf(address)
-  if (index >= 0) {
-    history.splice(index, 1)
-  }
-  history.unshift(current)
-  $history.set(history)
+  const history = $history.get().filter((item) => item !== address)
+  $history.set([current, ...history])
 }

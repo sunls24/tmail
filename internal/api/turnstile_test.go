@@ -11,7 +11,6 @@ func TestTurnstileVerified(t *testing.T) {
 	cfg := &config.Config{
 		TurnstileSecretKey: "test-secret",
 		TurnstileCookieTTL: time.Hour,
-		Debug:              true,
 	}
 	req := httptest.NewRequest("GET", "/api/domain", nil)
 	req.AddCookie(newTurnstileCookie(cfg, time.Now()))
@@ -25,7 +24,6 @@ func TestTurnstileVerifiedRejectsTamperedCookie(t *testing.T) {
 	cfg := &config.Config{
 		TurnstileSecretKey: "test-secret",
 		TurnstileCookieTTL: time.Hour,
-		Debug:              true,
 	}
 	cookie := newTurnstileCookie(cfg, time.Now())
 	cookie.Value += "tampered"
@@ -41,7 +39,6 @@ func TestTurnstileVerifiedRejectsExpiredCookie(t *testing.T) {
 	cfg := &config.Config{
 		TurnstileSecretKey: "test-secret",
 		TurnstileCookieTTL: time.Hour,
-		Debug:              true,
 	}
 	req := httptest.NewRequest("GET", "/api/domain", nil)
 	req.AddCookie(newTurnstileCookie(cfg, time.Now().Add(-2*time.Hour)))
@@ -55,7 +52,6 @@ func TestNewTurnstileCookieTTL(t *testing.T) {
 	cfg := &config.Config{
 		TurnstileSecretKey: "test-secret",
 		TurnstileCookieTTL: 6 * time.Hour,
-		Debug:              true,
 	}
 	now := time.Unix(1_700_000_000, 0)
 	cookie := newTurnstileCookie(cfg, now)

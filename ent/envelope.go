@@ -71,7 +71,7 @@ func (*Envelope) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Envelope fields.
-func (e *Envelope) assignValues(columns []string, values []any) error {
+func (_m *Envelope) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -82,39 +82,39 @@ func (e *Envelope) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			e.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case envelope.FieldTo:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field to", values[i])
 			} else if value.Valid {
-				e.To = value.String
+				_m.To = value.String
 			}
 		case envelope.FieldFrom:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field from", values[i])
 			} else if value.Valid {
-				e.From = value.String
+				_m.From = value.String
 			}
 		case envelope.FieldSubject:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field subject", values[i])
 			} else if value.Valid {
-				e.Subject = value.String
+				_m.Subject = value.String
 			}
 		case envelope.FieldContent:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value.Valid {
-				e.Content = value.String
+				_m.Content = value.String
 			}
 		case envelope.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				e.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			e.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -122,52 +122,52 @@ func (e *Envelope) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Envelope.
 // This includes values selected through modifiers, order, etc.
-func (e *Envelope) Value(name string) (ent.Value, error) {
-	return e.selectValues.Get(name)
+func (_m *Envelope) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryAttachments queries the "attachments" edge of the Envelope entity.
-func (e *Envelope) QueryAttachments() *AttachmentQuery {
-	return NewEnvelopeClient(e.config).QueryAttachments(e)
+func (_m *Envelope) QueryAttachments() *AttachmentQuery {
+	return NewEnvelopeClient(_m.config).QueryAttachments(_m)
 }
 
 // Update returns a builder for updating this Envelope.
 // Note that you need to call Envelope.Unwrap() before calling this method if this Envelope
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (e *Envelope) Update() *EnvelopeUpdateOne {
-	return NewEnvelopeClient(e.config).UpdateOne(e)
+func (_m *Envelope) Update() *EnvelopeUpdateOne {
+	return NewEnvelopeClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Envelope entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (e *Envelope) Unwrap() *Envelope {
-	_tx, ok := e.config.driver.(*txDriver)
+func (_m *Envelope) Unwrap() *Envelope {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Envelope is not a transactional entity")
 	}
-	e.config.driver = _tx.drv
-	return e
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (e *Envelope) String() string {
+func (_m *Envelope) String() string {
 	var builder strings.Builder
 	builder.WriteString("Envelope(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", e.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("to=")
-	builder.WriteString(e.To)
+	builder.WriteString(_m.To)
 	builder.WriteString(", ")
 	builder.WriteString("from=")
-	builder.WriteString(e.From)
+	builder.WriteString(_m.From)
 	builder.WriteString(", ")
 	builder.WriteString("subject=")
-	builder.WriteString(e.Subject)
+	builder.WriteString(_m.Subject)
 	builder.WriteString(", ")
 	builder.WriteString("content=")
-	builder.WriteString(e.Content)
+	builder.WriteString(_m.Content)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(e.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

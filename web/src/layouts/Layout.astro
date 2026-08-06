@@ -1,6 +1,6 @@
 ---
 import { useTranslations, type language } from "@/i18n/ui"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/toast"
 
 const { lang } = Astro.props
 const t = useTranslations(lang as language)
@@ -64,7 +64,7 @@ import "@/style/global.css"
     </div>
     <div id="appShell" class="contents" aria-hidden="true" inert>
       <slot />
-      <Toaster position="top-right" richColors={true} client:load />
+      <Toaster client:load />
     </div>
   </body>
 </html>
@@ -112,6 +112,7 @@ import "@/style/global.css"
     document.body.setAttribute("data-turnstile-verified", "")
     appShell.removeAttribute("inert")
     appShell.setAttribute("aria-hidden", "false")
+    document.dispatchEvent(new Event("tmail:ready"))
   }
 
   function loadTurnstile() {

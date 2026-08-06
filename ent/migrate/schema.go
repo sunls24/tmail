@@ -46,9 +46,14 @@ var (
 		PrimaryKey: []*schema.Column{EnvelopesColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "envelope_to",
+				Name:    "envelope_to_id",
 				Unique:  false,
-				Columns: []*schema.Column{EnvelopesColumns[1]},
+				Columns: []*schema.Column{EnvelopesColumns[1], EnvelopesColumns[0]},
+			},
+			{
+				Name:    "envelope_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{EnvelopesColumns[5]},
 			},
 		},
 	}

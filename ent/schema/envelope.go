@@ -26,7 +26,8 @@ func (Envelope) Fields() []ent.Field {
 
 func (Envelope) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("to"),
+		index.Fields("to", "id"),
+		index.Fields("created_at"),
 	}
 }
 

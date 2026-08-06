@@ -1,17 +1,18 @@
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog.tsx"
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { type language, useTranslations } from "@/i18n/ui"
 import { ABORT_SAFE } from "@/lib/constant.ts"
+import { fetchError } from "@/lib/fetch-error.ts"
 import type { Attachment, Envelope } from "@/lib/types.ts"
-import { apiFetch, fetchError, fmtDate, fmtString } from "@/lib/utils.ts"
-import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import { apiFetch, fmtDate, fmtString } from "@/lib/utils.ts"
 import { clsx } from "clsx"
 import { Download, Minimize2, Paperclip, RotateCw } from "lucide-react"
 import React, { useRef, useState } from "react"
@@ -21,7 +22,7 @@ function Detail({
   envelope,
   lang,
 }: {
-  children: React.ReactNode
+  children: React.ReactElement
   envelope: Envelope
   lang: string
 }) {
@@ -48,9 +49,12 @@ function Detail({
     controller.current?.abort(ABORT_SAFE)
     const currentController = new AbortController()
     controller.current = currentController
-    apiFetch<MailDetail>("/api/fetch/" + envelope.id, {
-      signal: currentController.signal,
-    })
+    apiFetch<MailDetail>(
+      `/api/fetch/${envelope.id}?to=${encodeURIComponent(envelope.to)}`,
+      {
+        signal: currentController.signal,
+      }
+    )
       .then((res) => {
         if (controller.current !== currentController) {
           return
@@ -73,38 +77,37 @@ function Detail({
 
   function onDownload(id: string) {
     window.open(
-      `/api/download/${encodeURIComponent(id)}`,
+      `/api/download/${encodeURIComponent(id)}?to=${encodeURIComponent(envelope.to)}`,
       "_blank",
       "noopener,noreferrer"
     )
   }
 
   return (
-    <AlertDialog onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent
+    <Dialog onOpenChange={onOpenChange}>
+      <DialogTrigger render={children} />
+      <DialogContent
+        showCloseButton={false}
         className={clsx(
-          "flex flex-col sm:max-w-4xl",
+          "flex max-w-[calc(100%-2rem)] flex-col sm:max-w-3xl",
           expanded
             ? "h-[85dvh] max-h-[85dvh] sm:h-[min(75dvh,48rem)]"
             : "max-h-11/12"
         )}
       >
-        <AlertDialogHeader className="relative">
-          <AlertDialogTitle>{envelope.subject}</AlertDialogTitle>
-          <AlertDialogDescription className="flex flex-col justify-between sm:flex-row">
+        <DialogHeader className="relative">
+          <DialogTitle>{envelope.subject}</DialogTitle>
+          <DialogDescription className="flex flex-col justify-between sm:flex-row">
             <span>{envelope.from}</span>
             <span>{fmtDate(envelope.created_at)}</span>
-          </AlertDialogDescription>
-          <AlertDialogPrimitive.Cancel
-            asChild
+          </DialogDescription>
+          <DialogClose
+            render={<Button variant="ghost" size="icon" />}
             className="absolute -top-1 -right-1"
           >
-            <Button variant="ghost" size="icon">
-              <Minimize2 />
-            </Button>
-          </AlertDialogPrimitive.Cancel>
-        </AlertDialogHeader>
+            <Minimize2 />
+          </DialogClose>
+        </DialogHeader>
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {attachments.map((a) => (
@@ -142,8 +145,8 @@ function Detail({
             />
           )}
         </div>
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -23,91 +23,91 @@ type AttachmentUpdate struct {
 }
 
 // Where appends a list predicates to the AttachmentUpdate builder.
-func (au *AttachmentUpdate) Where(ps ...predicate.Attachment) *AttachmentUpdate {
-	au.mutation.Where(ps...)
-	return au
+func (_u *AttachmentUpdate) Where(ps ...predicate.Attachment) *AttachmentUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetFilename sets the "filename" field.
-func (au *AttachmentUpdate) SetFilename(s string) *AttachmentUpdate {
-	au.mutation.SetFilename(s)
-	return au
+func (_u *AttachmentUpdate) SetFilename(v string) *AttachmentUpdate {
+	_u.mutation.SetFilename(v)
+	return _u
 }
 
 // SetNillableFilename sets the "filename" field if the given value is not nil.
-func (au *AttachmentUpdate) SetNillableFilename(s *string) *AttachmentUpdate {
-	if s != nil {
-		au.SetFilename(*s)
+func (_u *AttachmentUpdate) SetNillableFilename(v *string) *AttachmentUpdate {
+	if v != nil {
+		_u.SetFilename(*v)
 	}
-	return au
+	return _u
 }
 
 // SetFilepath sets the "filepath" field.
-func (au *AttachmentUpdate) SetFilepath(s string) *AttachmentUpdate {
-	au.mutation.SetFilepath(s)
-	return au
+func (_u *AttachmentUpdate) SetFilepath(v string) *AttachmentUpdate {
+	_u.mutation.SetFilepath(v)
+	return _u
 }
 
 // SetNillableFilepath sets the "filepath" field if the given value is not nil.
-func (au *AttachmentUpdate) SetNillableFilepath(s *string) *AttachmentUpdate {
-	if s != nil {
-		au.SetFilepath(*s)
+func (_u *AttachmentUpdate) SetNillableFilepath(v *string) *AttachmentUpdate {
+	if v != nil {
+		_u.SetFilepath(*v)
 	}
-	return au
+	return _u
 }
 
 // SetContentType sets the "contentType" field.
-func (au *AttachmentUpdate) SetContentType(s string) *AttachmentUpdate {
-	au.mutation.SetContentType(s)
-	return au
+func (_u *AttachmentUpdate) SetContentType(v string) *AttachmentUpdate {
+	_u.mutation.SetContentType(v)
+	return _u
 }
 
 // SetNillableContentType sets the "contentType" field if the given value is not nil.
-func (au *AttachmentUpdate) SetNillableContentType(s *string) *AttachmentUpdate {
-	if s != nil {
-		au.SetContentType(*s)
+func (_u *AttachmentUpdate) SetNillableContentType(v *string) *AttachmentUpdate {
+	if v != nil {
+		_u.SetContentType(*v)
 	}
-	return au
+	return _u
 }
 
 // SetOwnerID sets the "owner" edge to the Envelope entity by ID.
-func (au *AttachmentUpdate) SetOwnerID(id int) *AttachmentUpdate {
-	au.mutation.SetOwnerID(id)
-	return au
+func (_u *AttachmentUpdate) SetOwnerID(id int) *AttachmentUpdate {
+	_u.mutation.SetOwnerID(id)
+	return _u
 }
 
 // SetNillableOwnerID sets the "owner" edge to the Envelope entity by ID if the given value is not nil.
-func (au *AttachmentUpdate) SetNillableOwnerID(id *int) *AttachmentUpdate {
+func (_u *AttachmentUpdate) SetNillableOwnerID(id *int) *AttachmentUpdate {
 	if id != nil {
-		au = au.SetOwnerID(*id)
+		_u = _u.SetOwnerID(*id)
 	}
-	return au
+	return _u
 }
 
 // SetOwner sets the "owner" edge to the Envelope entity.
-func (au *AttachmentUpdate) SetOwner(e *Envelope) *AttachmentUpdate {
-	return au.SetOwnerID(e.ID)
+func (_u *AttachmentUpdate) SetOwner(v *Envelope) *AttachmentUpdate {
+	return _u.SetOwnerID(v.ID)
 }
 
 // Mutation returns the AttachmentMutation object of the builder.
-func (au *AttachmentUpdate) Mutation() *AttachmentMutation {
-	return au.mutation
+func (_u *AttachmentUpdate) Mutation() *AttachmentMutation {
+	return _u.mutation
 }
 
 // ClearOwner clears the "owner" edge to the Envelope entity.
-func (au *AttachmentUpdate) ClearOwner() *AttachmentUpdate {
-	au.mutation.ClearOwner()
-	return au
+func (_u *AttachmentUpdate) ClearOwner() *AttachmentUpdate {
+	_u.mutation.ClearOwner()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (au *AttachmentUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, au.sqlSave, au.mutation, au.hooks)
+func (_u *AttachmentUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (au *AttachmentUpdate) SaveX(ctx context.Context) int {
-	affected, err := au.Save(ctx)
+func (_u *AttachmentUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -115,31 +115,31 @@ func (au *AttachmentUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (au *AttachmentUpdate) Exec(ctx context.Context) error {
-	_, err := au.Save(ctx)
+func (_u *AttachmentUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (au *AttachmentUpdate) ExecX(ctx context.Context) {
-	if err := au.Exec(ctx); err != nil {
+func (_u *AttachmentUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (au *AttachmentUpdate) check() error {
-	if v, ok := au.mutation.Filename(); ok {
+func (_u *AttachmentUpdate) check() error {
+	if v, ok := _u.mutation.Filename(); ok {
 		if err := attachment.FilenameValidator(v); err != nil {
 			return &ValidationError{Name: "filename", err: fmt.Errorf(`ent: validator failed for field "Attachment.filename": %w`, err)}
 		}
 	}
-	if v, ok := au.mutation.Filepath(); ok {
+	if v, ok := _u.mutation.Filepath(); ok {
 		if err := attachment.FilepathValidator(v); err != nil {
 			return &ValidationError{Name: "filepath", err: fmt.Errorf(`ent: validator failed for field "Attachment.filepath": %w`, err)}
 		}
 	}
-	if v, ok := au.mutation.ContentType(); ok {
+	if v, ok := _u.mutation.ContentType(); ok {
 		if err := attachment.ContentTypeValidator(v); err != nil {
 			return &ValidationError{Name: "contentType", err: fmt.Errorf(`ent: validator failed for field "Attachment.contentType": %w`, err)}
 		}
@@ -147,28 +147,28 @@ func (au *AttachmentUpdate) check() error {
 	return nil
 }
 
-func (au *AttachmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := au.check(); err != nil {
-		return n, err
+func (_u *AttachmentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(attachment.Table, attachment.Columns, sqlgraph.NewFieldSpec(attachment.FieldID, field.TypeString))
-	if ps := au.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := au.mutation.Filename(); ok {
+	if value, ok := _u.mutation.Filename(); ok {
 		_spec.SetField(attachment.FieldFilename, field.TypeString, value)
 	}
-	if value, ok := au.mutation.Filepath(); ok {
+	if value, ok := _u.mutation.Filepath(); ok {
 		_spec.SetField(attachment.FieldFilepath, field.TypeString, value)
 	}
-	if value, ok := au.mutation.ContentType(); ok {
+	if value, ok := _u.mutation.ContentType(); ok {
 		_spec.SetField(attachment.FieldContentType, field.TypeString, value)
 	}
-	if au.mutation.OwnerCleared() {
+	if _u.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -181,7 +181,7 @@ func (au *AttachmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -197,7 +197,7 @@ func (au *AttachmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{attachment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -205,8 +205,8 @@ func (au *AttachmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	au.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // AttachmentUpdateOne is the builder for updating a single Attachment entity.
@@ -218,98 +218,98 @@ type AttachmentUpdateOne struct {
 }
 
 // SetFilename sets the "filename" field.
-func (auo *AttachmentUpdateOne) SetFilename(s string) *AttachmentUpdateOne {
-	auo.mutation.SetFilename(s)
-	return auo
+func (_u *AttachmentUpdateOne) SetFilename(v string) *AttachmentUpdateOne {
+	_u.mutation.SetFilename(v)
+	return _u
 }
 
 // SetNillableFilename sets the "filename" field if the given value is not nil.
-func (auo *AttachmentUpdateOne) SetNillableFilename(s *string) *AttachmentUpdateOne {
-	if s != nil {
-		auo.SetFilename(*s)
+func (_u *AttachmentUpdateOne) SetNillableFilename(v *string) *AttachmentUpdateOne {
+	if v != nil {
+		_u.SetFilename(*v)
 	}
-	return auo
+	return _u
 }
 
 // SetFilepath sets the "filepath" field.
-func (auo *AttachmentUpdateOne) SetFilepath(s string) *AttachmentUpdateOne {
-	auo.mutation.SetFilepath(s)
-	return auo
+func (_u *AttachmentUpdateOne) SetFilepath(v string) *AttachmentUpdateOne {
+	_u.mutation.SetFilepath(v)
+	return _u
 }
 
 // SetNillableFilepath sets the "filepath" field if the given value is not nil.
-func (auo *AttachmentUpdateOne) SetNillableFilepath(s *string) *AttachmentUpdateOne {
-	if s != nil {
-		auo.SetFilepath(*s)
+func (_u *AttachmentUpdateOne) SetNillableFilepath(v *string) *AttachmentUpdateOne {
+	if v != nil {
+		_u.SetFilepath(*v)
 	}
-	return auo
+	return _u
 }
 
 // SetContentType sets the "contentType" field.
-func (auo *AttachmentUpdateOne) SetContentType(s string) *AttachmentUpdateOne {
-	auo.mutation.SetContentType(s)
-	return auo
+func (_u *AttachmentUpdateOne) SetContentType(v string) *AttachmentUpdateOne {
+	_u.mutation.SetContentType(v)
+	return _u
 }
 
 // SetNillableContentType sets the "contentType" field if the given value is not nil.
-func (auo *AttachmentUpdateOne) SetNillableContentType(s *string) *AttachmentUpdateOne {
-	if s != nil {
-		auo.SetContentType(*s)
+func (_u *AttachmentUpdateOne) SetNillableContentType(v *string) *AttachmentUpdateOne {
+	if v != nil {
+		_u.SetContentType(*v)
 	}
-	return auo
+	return _u
 }
 
 // SetOwnerID sets the "owner" edge to the Envelope entity by ID.
-func (auo *AttachmentUpdateOne) SetOwnerID(id int) *AttachmentUpdateOne {
-	auo.mutation.SetOwnerID(id)
-	return auo
+func (_u *AttachmentUpdateOne) SetOwnerID(id int) *AttachmentUpdateOne {
+	_u.mutation.SetOwnerID(id)
+	return _u
 }
 
 // SetNillableOwnerID sets the "owner" edge to the Envelope entity by ID if the given value is not nil.
-func (auo *AttachmentUpdateOne) SetNillableOwnerID(id *int) *AttachmentUpdateOne {
+func (_u *AttachmentUpdateOne) SetNillableOwnerID(id *int) *AttachmentUpdateOne {
 	if id != nil {
-		auo = auo.SetOwnerID(*id)
+		_u = _u.SetOwnerID(*id)
 	}
-	return auo
+	return _u
 }
 
 // SetOwner sets the "owner" edge to the Envelope entity.
-func (auo *AttachmentUpdateOne) SetOwner(e *Envelope) *AttachmentUpdateOne {
-	return auo.SetOwnerID(e.ID)
+func (_u *AttachmentUpdateOne) SetOwner(v *Envelope) *AttachmentUpdateOne {
+	return _u.SetOwnerID(v.ID)
 }
 
 // Mutation returns the AttachmentMutation object of the builder.
-func (auo *AttachmentUpdateOne) Mutation() *AttachmentMutation {
-	return auo.mutation
+func (_u *AttachmentUpdateOne) Mutation() *AttachmentMutation {
+	return _u.mutation
 }
 
 // ClearOwner clears the "owner" edge to the Envelope entity.
-func (auo *AttachmentUpdateOne) ClearOwner() *AttachmentUpdateOne {
-	auo.mutation.ClearOwner()
-	return auo
+func (_u *AttachmentUpdateOne) ClearOwner() *AttachmentUpdateOne {
+	_u.mutation.ClearOwner()
+	return _u
 }
 
 // Where appends a list predicates to the AttachmentUpdate builder.
-func (auo *AttachmentUpdateOne) Where(ps ...predicate.Attachment) *AttachmentUpdateOne {
-	auo.mutation.Where(ps...)
-	return auo
+func (_u *AttachmentUpdateOne) Where(ps ...predicate.Attachment) *AttachmentUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (auo *AttachmentUpdateOne) Select(field string, fields ...string) *AttachmentUpdateOne {
-	auo.fields = append([]string{field}, fields...)
-	return auo
+func (_u *AttachmentUpdateOne) Select(field string, fields ...string) *AttachmentUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Attachment entity.
-func (auo *AttachmentUpdateOne) Save(ctx context.Context) (*Attachment, error) {
-	return withHooks(ctx, auo.sqlSave, auo.mutation, auo.hooks)
+func (_u *AttachmentUpdateOne) Save(ctx context.Context) (*Attachment, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (auo *AttachmentUpdateOne) SaveX(ctx context.Context) *Attachment {
-	node, err := auo.Save(ctx)
+func (_u *AttachmentUpdateOne) SaveX(ctx context.Context) *Attachment {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -317,31 +317,31 @@ func (auo *AttachmentUpdateOne) SaveX(ctx context.Context) *Attachment {
 }
 
 // Exec executes the query on the entity.
-func (auo *AttachmentUpdateOne) Exec(ctx context.Context) error {
-	_, err := auo.Save(ctx)
+func (_u *AttachmentUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (auo *AttachmentUpdateOne) ExecX(ctx context.Context) {
-	if err := auo.Exec(ctx); err != nil {
+func (_u *AttachmentUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (auo *AttachmentUpdateOne) check() error {
-	if v, ok := auo.mutation.Filename(); ok {
+func (_u *AttachmentUpdateOne) check() error {
+	if v, ok := _u.mutation.Filename(); ok {
 		if err := attachment.FilenameValidator(v); err != nil {
 			return &ValidationError{Name: "filename", err: fmt.Errorf(`ent: validator failed for field "Attachment.filename": %w`, err)}
 		}
 	}
-	if v, ok := auo.mutation.Filepath(); ok {
+	if v, ok := _u.mutation.Filepath(); ok {
 		if err := attachment.FilepathValidator(v); err != nil {
 			return &ValidationError{Name: "filepath", err: fmt.Errorf(`ent: validator failed for field "Attachment.filepath": %w`, err)}
 		}
 	}
-	if v, ok := auo.mutation.ContentType(); ok {
+	if v, ok := _u.mutation.ContentType(); ok {
 		if err := attachment.ContentTypeValidator(v); err != nil {
 			return &ValidationError{Name: "contentType", err: fmt.Errorf(`ent: validator failed for field "Attachment.contentType": %w`, err)}
 		}
@@ -349,17 +349,17 @@ func (auo *AttachmentUpdateOne) check() error {
 	return nil
 }
 
-func (auo *AttachmentUpdateOne) sqlSave(ctx context.Context) (_node *Attachment, err error) {
-	if err := auo.check(); err != nil {
+func (_u *AttachmentUpdateOne) sqlSave(ctx context.Context) (_node *Attachment, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(attachment.Table, attachment.Columns, sqlgraph.NewFieldSpec(attachment.FieldID, field.TypeString))
-	id, ok := auo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Attachment.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := auo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, attachment.FieldID)
 		for _, f := range fields {
@@ -371,23 +371,23 @@ func (auo *AttachmentUpdateOne) sqlSave(ctx context.Context) (_node *Attachment,
 			}
 		}
 	}
-	if ps := auo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := auo.mutation.Filename(); ok {
+	if value, ok := _u.mutation.Filename(); ok {
 		_spec.SetField(attachment.FieldFilename, field.TypeString, value)
 	}
-	if value, ok := auo.mutation.Filepath(); ok {
+	if value, ok := _u.mutation.Filepath(); ok {
 		_spec.SetField(attachment.FieldFilepath, field.TypeString, value)
 	}
-	if value, ok := auo.mutation.ContentType(); ok {
+	if value, ok := _u.mutation.ContentType(); ok {
 		_spec.SetField(attachment.FieldContentType, field.TypeString, value)
 	}
-	if auo.mutation.OwnerCleared() {
+	if _u.mutation.OwnerCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -400,7 +400,7 @@ func (auo *AttachmentUpdateOne) sqlSave(ctx context.Context) (_node *Attachment,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.OwnerIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -416,10 +416,10 @@ func (auo *AttachmentUpdateOne) sqlSave(ctx context.Context) (_node *Attachment,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Attachment{config: auo.config}
+	_node = &Attachment{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, auo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{attachment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -427,6 +427,6 @@ func (auo *AttachmentUpdateOne) sqlSave(ctx context.Context) (_node *Attachment,
 		}
 		return nil, err
 	}
-	auo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button.tsx"
 import { Skeleton } from "@/components/ui/skeleton.tsx"
 import { type language, useTranslations } from "@/i18n/ui.ts"
 import { ABORT_SAFE } from "@/lib/constant.ts"
+import { fetchError } from "@/lib/fetch-error.ts"
 import { $address, initStore } from "@/lib/store/store.ts"
 import type { Envelope } from "@/lib/types.ts"
 import {
   apiFetch,
-  fetchError,
   fmtDate,
   fmtFrom,
   fmtString,
@@ -25,7 +25,7 @@ import {
   RotateCw,
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/toast"
 
 const PAGE_SIZE = 30
 
@@ -41,6 +41,7 @@ function fetchPage(address: string, signal: AbortSignal, beforeId?: number) {
 }
 
 function Content({ lang }: { lang: string }) {
+  const [ready, setReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
@@ -50,13 +51,28 @@ function Content({ lang }: { lang: string }) {
   const t = useTranslations(lang as language)
 
   useEffect(() => {
-    apiFetch<string[]>("/api/domain")
-      .then((domainList) => initStore(domainList))
-      .catch(fetchError)
+    const onReady = () => setReady(true)
+    if (document.body.hasAttribute("data-turnstile-verified")) {
+      onReady()
+      return
+    }
+
+    document.addEventListener("tmail:ready", onReady, { once: true })
+    return () => document.removeEventListener("tmail:ready", onReady)
   }, [])
 
   useEffect(() => {
-    if (!address) {
+    if (!ready) {
+      return
+    }
+
+    apiFetch<string[]>("/api/domain")
+      .then((domainList) => initStore(domainList))
+      .catch(fetchError)
+  }, [ready])
+
+  useEffect(() => {
+    if (!ready || !address) {
       return
     }
 
@@ -82,14 +98,13 @@ function Content({ lang }: { lang: string }) {
           if (currentController.signal.aborted) {
             return
           }
-          if (envelope.id <= latestId) {
-            continue
-          }
-
-          latestId = envelope.id
+          latestId = Math.max(latestId, envelope.id)
           envelope.animate = true
           setEnvelopes((current) => [envelope, ...current])
-          toast.success(fmtString(t("receiveNew"), envelope.from))
+          toast.add({
+            title: fmtString(t("receiveNew"), envelope.from),
+            type: "success",
+          })
         } catch (error) {
           if (currentController.signal.aborted) {
             return
@@ -135,7 +150,7 @@ function Content({ lang }: { lang: string }) {
         controller.current = null
       }
     }
-  }, [address, lang])
+  }, [address, lang, ready])
 
   async function loadMore() {
     if (!address || !hasMore || loadingMore || envelopes.length === 0) {
@@ -172,8 +187,10 @@ function Content({ lang }: { lang: string }) {
   function copyToClipboard() {
     navigator.clipboard
       .writeText(address)
-      .then(() => toast.success(t("copy") + " " + address))
-      .catch((e) => toast.error(e.message ?? e))
+      .then(() =>
+        toast.add({ title: t("copy") + " " + address, type: "success" })
+      )
+      .catch((e) => toast.add({ title: e.message ?? String(e), type: "error" }))
   }
 
   return (

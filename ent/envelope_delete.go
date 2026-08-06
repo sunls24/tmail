@@ -20,56 +20,56 @@ type EnvelopeDelete struct {
 }
 
 // Where appends a list predicates to the EnvelopeDelete builder.
-func (ed *EnvelopeDelete) Where(ps ...predicate.Envelope) *EnvelopeDelete {
-	ed.mutation.Where(ps...)
-	return ed
+func (_d *EnvelopeDelete) Where(ps ...predicate.Envelope) *EnvelopeDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ed *EnvelopeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ed.sqlExec, ed.mutation, ed.hooks)
+func (_d *EnvelopeDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ed *EnvelopeDelete) ExecX(ctx context.Context) int {
-	n, err := ed.Exec(ctx)
+func (_d *EnvelopeDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ed *EnvelopeDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *EnvelopeDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(envelope.Table, sqlgraph.NewFieldSpec(envelope.FieldID, field.TypeInt))
-	if ps := ed.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ed.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ed.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // EnvelopeDeleteOne is the builder for deleting a single Envelope entity.
 type EnvelopeDeleteOne struct {
-	ed *EnvelopeDelete
+	_d *EnvelopeDelete
 }
 
 // Where appends a list predicates to the EnvelopeDelete builder.
-func (edo *EnvelopeDeleteOne) Where(ps ...predicate.Envelope) *EnvelopeDeleteOne {
-	edo.ed.mutation.Where(ps...)
-	return edo
+func (_d *EnvelopeDeleteOne) Where(ps ...predicate.Envelope) *EnvelopeDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (edo *EnvelopeDeleteOne) Exec(ctx context.Context) error {
-	n, err := edo.ed.Exec(ctx)
+func (_d *EnvelopeDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (edo *EnvelopeDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (edo *EnvelopeDeleteOne) ExecX(ctx context.Context) {
-	if err := edo.Exec(ctx); err != nil {
+func (_d *EnvelopeDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

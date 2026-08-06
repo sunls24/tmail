@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -15,7 +16,7 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	slogzerolog "github.com/samber/slog-zerolog/v2"
 	"github.com/sunls24/gox"
 	"github.com/sunls24/gox/server"
 )
@@ -27,23 +28,25 @@ func NewApp() App {
 	return App{}
 }
 
-func (App) init() {
-	log.Logger = log.Logger.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "06-01-02 15:04:05"})
+func setupLogger(debug bool) *slog.Logger {
+	level := slog.LevelInfo
+	if debug {
+		level = slog.LevelDebug
+	}
+	zeroLogger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "06-01-02 15:04:05"})
+	logger := slog.New(slogzerolog.Option{Level: level, Logger: &zeroLogger}.NewZerologHandler())
+	slog.SetDefault(logger)
+	return logger
 }
 
 func (app App) Run() error {
-	app.init()
 	cfg := config.MustNew()
-	if cfg.Debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	}
+	logger := setupLogger(cfg.Debug)
 	if !cfg.TurnstileEnabled() {
-		log.Warn().Msg("Turnstile verification is disabled")
+		slog.Warn("Turnstile verification is disabled")
 	}
 	if cfg.ReportHMACSecret == "" {
-		log.Warn().Msg("Report HMAC verification is disabled")
+		slog.Warn("Report HMAC verification is disabled")
 	}
 
 	client, err := ent.New(cfg.DB)
@@ -53,6 +56,7 @@ func (app App) Run() error {
 	defer client.Close()
 
 	return server.Start(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), func(srv *server.Server) {
+		srv.Echo.Logger = logger
 		srv.Echo.Pre(i18n)
 		ctx := api.ServerContext(srv, cfg, client)
 		schedule.New(ctx).Run()

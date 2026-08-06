@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"tmail/ent"
 
 	"github.com/jhillyerd/enmime/v2"
-	"github.com/rs/zerolog/log"
 	"github.com/sunls24/gox"
 	"github.com/sunls24/gox/notifier"
 	"github.com/sunls24/gox/server"
@@ -34,7 +34,7 @@ func Report(ctx context.Context) (*server.Reply, error) {
 		content = envelope.Text
 	}
 
-	log.Debug().Msgf("Report: %s <- %s: %s", to, from, subject)
+	slog.Debug("Report", "to", to, "from", from, "subject", subject)
 	e, err := DB(ctx).Envelope.Create().
 		SetTo(to).
 		SetFrom(from).
@@ -43,12 +43,11 @@ func Report(ctx context.Context) (*server.Reply, error) {
 		Save(ctx)
 	if err == nil {
 		notifyEnvelope := envelopeSummary(e)
+		attachmentCtx := context.WithoutCancel(ctx)
 		gox.SafeGo(func() {
+			saveAttachment(attachmentCtx, envelope.Attachments, to, e.ID)
 			notifier.Notify(e.To, notifyEnvelope)
 			notifier.Notify(subAll, notifyEnvelope)
-		})
-		gox.SafeGo(func() {
-			saveAttachment(context.WithoutCancel(ctx), envelope.Attachments, to, e.ID)
 		})
 	}
 	return server.OK(nil), err
@@ -73,7 +72,7 @@ func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, 
 	cfg := Config(ctx)
 	dir := filepath.Join(cfg.BaseDir, gox.MD5(to)[:16])
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		log.Err(err).Msg("MkdirAll")
+		slog.Error("MkdirAll", "err", err)
 		return
 	}
 
@@ -84,9 +83,9 @@ func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, 
 
 		name := gox.MD5(fmt.Sprintf("%d:%d:%s", ownerID, i, a.FileName))
 		fp := filepath.Join(dir, name)
-		log.Info().Msgf("Attachment: %s -> %s", a.FileName, fp)
+		slog.Info("Attachment", "filename", a.FileName, "filepath", fp)
 		if err := os.WriteFile(fp, a.Content, 0o644); err != nil {
-			log.Err(err).Msg("WriteFile")
+			slog.Error("WriteFile", "err", err)
 			continue
 		}
 
@@ -99,7 +98,7 @@ func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, 
 			Save(ctx)
 		if err != nil {
 			_ = os.Remove(fp)
-			log.Err(err).Msg("Attachment Save")
+			slog.Error("Attachment Save", "err", err)
 		}
 	}
 }

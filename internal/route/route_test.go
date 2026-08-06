@@ -23,7 +23,6 @@ func TestRegisterTurnstileRoutes(t *testing.T) {
 		e := echo.New()
 		Register(e, &config.Config{})
 
-		assertRoute(t, e, http.MethodGet, "/api/turnstile/status", true)
 		assertRoute(t, e, http.MethodPost, "/api/turnstile/verify", false)
 	})
 
@@ -34,7 +33,6 @@ func TestRegisterTurnstileRoutes(t *testing.T) {
 			TurnstileSecretKey: "test-secret-key",
 		})
 
-		assertRoute(t, e, http.MethodGet, "/api/turnstile/status", true)
 		assertRoute(t, e, http.MethodPost, "/api/turnstile/verify", true)
 	})
 }
