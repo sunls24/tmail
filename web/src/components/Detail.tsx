@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button.tsx"
 import { type language, useTranslations } from "@/i18n/ui"
 import { ABORT_SAFE } from "@/lib/constant.ts"
 import type { Attachment, Envelope } from "@/lib/types.ts"
-import { apiFetch, fetchError, fmtDate } from "@/lib/utils.ts"
+import { apiFetch, fetchError, fmtDate, fmtString } from "@/lib/utils.ts"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import { clsx } from "clsx"
 import { Download, Minimize2, Paperclip, RotateCw } from "lucide-react"
-import React, { useMemo, useRef, useState } from "react"
+import React, { useRef, useState } from "react"
 
 function Detail({
   children,
@@ -24,40 +25,71 @@ function Detail({
   envelope: Envelope
   lang: string
 }) {
-  const divRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const controller = useRef<AbortController>(null)
   const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [content, setContent] = useState("")
 
-  const t = useMemo(() => useTranslations(lang as language), [])
+  const t = useTranslations(lang as language)
 
   function onOpenChange(open: boolean) {
-    if (open) {
-      setLoading(true)
-      controller.current = new AbortController()
-      apiFetch<MailDetail>("/api/fetch/" + envelope.id, {
-        signal: controller.current.signal,
-      })
-        .then((res) => {
-          setAttachments(res.attachments)
-          divRef.current!.attachShadow({ mode: "open" }).innerHTML = res.content
-        })
-        .catch(fetchError)
-        .finally(() => setLoading(false))
+    if (!open) {
+      controller.current?.abort(ABORT_SAFE)
+      controller.current = null
+      setAttachments([])
+      setContent("")
+      setLoading(false)
       return
     }
-    setAttachments([])
-    controller.current!.abort(ABORT_SAFE)
+
+    setExpanded(false)
+    setLoading(true)
+    controller.current?.abort(ABORT_SAFE)
+    const currentController = new AbortController()
+    controller.current = currentController
+    apiFetch<MailDetail>("/api/fetch/" + envelope.id, {
+      signal: currentController.signal,
+    })
+      .then((res) => {
+        if (controller.current !== currentController) {
+          return
+        }
+        setAttachments(res.attachments)
+        setContent(res.content)
+        setExpanded(true)
+      })
+      .catch((error) => {
+        if (controller.current === currentController) {
+          fetchError(error)
+        }
+      })
+      .finally(() => {
+        if (controller.current === currentController) {
+          setLoading(false)
+        }
+      })
   }
 
   function onDownload(id: string) {
-    window.open(`/api/download/${id}`, "_blank")
+    window.open(
+      `/api/download/${encodeURIComponent(id)}`,
+      "_blank",
+      "noopener,noreferrer"
+    )
   }
 
   return (
     <AlertDialog onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent className="flex max-h-11/12 flex-col sm:max-w-4xl">
+      <AlertDialogContent
+        className={clsx(
+          "flex flex-col sm:max-w-4xl",
+          expanded
+            ? "h-[85dvh] max-h-[85dvh] sm:h-[min(75dvh,48rem)]"
+            : "max-h-11/12"
+        )}
+      >
         <AlertDialogHeader className="relative">
           <AlertDialogTitle>{envelope.subject}</AlertDialogTitle>
           <AlertDialogDescription className="flex flex-col justify-between sm:flex-row">
@@ -76,7 +108,9 @@ function Detail({
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {attachments.map((a) => (
-              <div
+              <button
+                type="button"
+                aria-label={fmtString(t("download"), a.filename)}
                 className="bg-secondary text-muted-foreground hover:text-foreground group flex items-center gap-1 rounded-sm border px-1.5 py-1 text-sm hover:cursor-pointer hover:shadow-xs"
                 key={a.id}
                 onClick={() => onDownload(a.id)}
@@ -87,16 +121,25 @@ function Detail({
                 />
                 <Paperclip className="group-hover:hidden" size={16} />
                 {a.filename}
-              </div>
+              </button>
             ))}
           </div>
         )}
-        <div ref={divRef} className="flex-1 overflow-auto border-t pt-4">
+        <div className="flex min-h-0 flex-1 overflow-hidden border-t pt-4">
           {loading && (
-            <div className="text-muted-foreground flex h-6.5 items-center justify-center gap-1">
+            <div className="text-muted-foreground flex h-16 w-full shrink-0 items-center justify-center gap-1">
               <RotateCw className="animate-spin" size={18} />
-              <span className="">{t("mailLoading")}</span>
+              <span>{t("mailLoading")}</span>
             </div>
+          )}
+          {content && (
+            <iframe
+              title={envelope.subject}
+              sandbox=""
+              referrerPolicy="no-referrer"
+              srcDoc={content}
+              className="h-full w-full border-0"
+            />
           )}
         </div>
       </AlertDialogContent>

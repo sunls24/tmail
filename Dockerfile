@@ -2,11 +2,12 @@
 
 FROM --platform=$BUILDPLATFORM oven/bun:alpine AS bun-builder
 WORKDIR /app
+ENV ASTRO_TELEMETRY_DISABLED=1
 
 COPY ./web/package.json ./web/bun.lock ./
 RUN bun install --frozen-lockfile
 COPY ./web .
-RUN bunx astro telemetry disable && bun run build
+RUN bun run build
 
 FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine AS builder
 WORKDIR /app

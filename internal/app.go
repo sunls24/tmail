@@ -42,6 +42,9 @@ func (app App) Run() error {
 	if !cfg.TurnstileEnabled() {
 		log.Warn().Msg("Turnstile verification is disabled")
 	}
+	if cfg.ReportHMACSecret == "" {
+		log.Warn().Msg("Report HMAC verification is disabled")
+	}
 
 	client, err := ent.New(cfg.DB)
 	if err != nil {

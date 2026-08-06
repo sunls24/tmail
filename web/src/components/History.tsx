@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -27,7 +27,7 @@ function History({
 }) {
   const [history, setHistory] = useState<string[]>([])
 
-  const t = useMemo(() => useTranslations(lang as language), [])
+  const t = useTranslations(lang as language)
 
   function onOpenChange(open: boolean) {
     if (open) {
@@ -46,9 +46,9 @@ function History({
   }
 
   function onDelete(i: number) {
-    history.splice(i, 1)
-    $history.set(history)
-    setHistory([...history])
+    const next = history.filter((_, index) => index !== i)
+    $history.set(next)
+    setHistory(next)
   }
 
   return (
@@ -77,7 +77,10 @@ function History({
               key={v}
             >
               <AlertDialogPrimitive.Cancel asChild onClick={() => onSwitch(v)}>
-                <div className="group bg-sidebar text-muted-foreground hover:text-foreground hover:bg-secondary flex flex-1 items-center rounded-sm border px-3 py-2 transition-colors hover:cursor-pointer">
+                <button
+                  type="button"
+                  className="group bg-sidebar text-muted-foreground hover:text-foreground hover:bg-secondary flex flex-1 items-center rounded-sm border px-3 py-2 text-left transition-colors hover:cursor-pointer"
+                >
                   <Mail size={16} className="mr-2" />
                   {v}
                   <div className="flex-1" />
@@ -85,7 +88,7 @@ function History({
                     <span className="text-sm">{t("switchHistory")}</span>
                     <CircleArrowRight strokeWidth={1.8} size={18} />
                   </div>
-                </div>
+                </button>
               </AlertDialogPrimitive.Cancel>
               <Button variant="ghost" size="icon" onClick={() => onDelete(i)}>
                 <Trash />

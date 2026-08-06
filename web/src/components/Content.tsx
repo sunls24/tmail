@@ -1,6 +1,7 @@
 import Actions from "@/components/Actions.tsx"
 import Detail from "@/components/Detail.tsx"
 import Mounted from "@/components/Mounted.tsx"
+import { Button } from "@/components/ui/button.tsx"
 import { Skeleton } from "@/components/ui/skeleton.tsx"
 import { type language, useTranslations } from "@/i18n/ui.ts"
 import { ABORT_SAFE } from "@/lib/constant.ts"
@@ -23,76 +24,149 @@ import {
   Loader,
   RotateCw,
 } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+const PAGE_SIZE = 30
+
+function fetchPage(address: string, signal: AbortSignal, beforeId?: number) {
+  const params = new URLSearchParams({
+    to: address,
+    limit: String(PAGE_SIZE),
+  })
+  if (beforeId !== undefined) {
+    params.set("before_id", String(beforeId))
+  }
+  return apiFetch<Envelope[]>(`/api/fetch?${params}`, { signal })
+}
+
 function Content({ lang }: { lang: string }) {
-  const [latestId, setLatestId] = useState(-1)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
   const [envelopes, setEnvelopes] = useState<Envelope[]>([])
-  const controller = useRef<AbortController>(null)
-
   const address = useStore($address)
-
-  const t = useMemo(() => useTranslations(lang as language), [])
+  const controller = useRef<AbortController | null>(null)
+  const t = useTranslations(lang as language)
 
   useEffect(() => {
     apiFetch<string[]>("/api/domain")
       .then((domainList) => initStore(domainList))
       .catch(fetchError)
-
-    return () => controller.current?.abort(ABORT_SAFE)
   }, [])
-
-  useEffect(() => {
-    if (latestId < 0) {
-      return
-    }
-
-    fetchLatest().catch(fetchError)
-  }, [latestId])
 
   useEffect(() => {
     if (!address) {
       return
     }
-    controller.current?.abort(ABORT_SAFE)
-    controller.current = new AbortController()
+
+    const currentController = new AbortController()
+    controller.current = currentController
+    let latestId = 0
+
+    async function poll() {
+      while (!currentController.signal.aborted) {
+        try {
+          const params = new URLSearchParams({
+            to: address,
+            id: String(latestId),
+          })
+          const res = await fetch(`/api/fetch/latest?${params}`, {
+            signal: currentController.signal,
+          })
+          if (res.status === 204) {
+            continue
+          }
+
+          const envelope = await unwrapApi<Envelope>(res)
+          if (currentController.signal.aborted) {
+            return
+          }
+          if (envelope.id <= latestId) {
+            continue
+          }
+
+          latestId = envelope.id
+          envelope.animate = true
+          setEnvelopes((current) => [envelope, ...current])
+          toast.success(fmtString(t("receiveNew"), envelope.from))
+        } catch (error) {
+          if (currentController.signal.aborted) {
+            return
+          }
+          fetchError(error)
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+      }
+    }
+
+    async function start() {
+      try {
+        const list = await fetchPage(address, currentController.signal)
+        if (currentController.signal.aborted) {
+          return
+        }
+
+        const page = list.slice(0, PAGE_SIZE)
+        latestId = page[0]?.id ?? 0
+        setEnvelopes(page)
+        setHasMore(list.length > PAGE_SIZE)
+        void poll()
+      } catch (error) {
+        if (!currentController.signal.aborted) {
+          fetchError(error)
+        }
+      } finally {
+        if (!currentController.signal.aborted) {
+          setLoading(false)
+        }
+      }
+    }
 
     setLoading(true)
+    setLoadingMore(false)
     setEnvelopes([])
-    setLatestId(-1)
-    fetchAll()
-      .catch(fetchError)
-      .finally(() => setLoading(false))
-  }, [address])
+    setHasMore(false)
+    void start()
 
-  async function fetchAll() {
-    const list = await apiFetch<Envelope[]>("/api/fetch?to=" + address, {
-      signal: controller.current!.signal,
-    })
-    setEnvelopes(list)
-    setLatestId(list.length > 0 ? list[0].id : 0)
-  }
+    return () => {
+      currentController.abort(ABORT_SAFE)
+      if (controller.current === currentController) {
+        controller.current = null
+      }
+    }
+  }, [address, lang])
 
-  async function fetchLatest() {
-    const res = await fetch(`/api/fetch/latest?to=${address}&id=${latestId}`, {
-      signal: controller.current!.signal,
-    })
-    if (!res.ok) {
-      setTimeout(() => fetchLatest().catch(fetchError), 1000)
-      await unwrapApi<Envelope>(res)
+  async function loadMore() {
+    if (!address || !hasMore || loadingMore || envelopes.length === 0) {
       return
     }
-    if (res.status === 204) {
-      setTimeout(() => fetchLatest().catch(fetchError))
+
+    const currentController = controller.current
+    if (!currentController) {
       return
     }
-    const e = await unwrapApi<Envelope>(res)
-    e.animate = true
-    setEnvelopes([e, ...envelopes])
-    setLatestId(e.id)
-    toast.success(fmtString(t("receiveNew"), e.from))
+
+    const beforeId = envelopes[envelopes.length - 1].id
+    setLoadingMore(true)
+    try {
+      const list = await fetchPage(address, currentController.signal, beforeId)
+      if (currentController.signal.aborted) {
+        return
+      }
+
+      const page = list.slice(0, PAGE_SIZE)
+      setEnvelopes((current) => [...current, ...page])
+      setHasMore(list.length > PAGE_SIZE)
+    } catch (error) {
+      if (!currentController.signal.aborted) {
+        fetchError(error)
+      }
+    } finally {
+      if (!currentController.signal.aborted) {
+        setLoadingMore(false)
+      }
+    }
   }
 
   function copyToClipboard() {
@@ -115,12 +189,14 @@ function Content({ lang }: { lang: string }) {
               <span className="font-mono font-semibold">{address}</span>
             </Mounted>
           </div>
-          <div
+          <button
+            type="button"
+            aria-label={t("copyAddress")}
             onClick={copyToClipboard}
-            className="hover:bg-sidebar flex items-center self-stretch transition-colors hover:cursor-pointer hover:border-r"
+            className="hover:bg-sidebar flex items-center self-stretch border-0 bg-transparent transition-colors hover:cursor-pointer hover:border-r"
           >
             <ClipboardCopy className="mx-2" size={20} strokeWidth={1.8} />
-          </div>
+          </button>
           <div className="flex-1" />
           <div className="text-muted-foreground hidden font-medium sm:inline">
             {t("realTime")}
@@ -146,13 +222,14 @@ function Content({ lang }: { lang: string }) {
         )}
         {envelopes.map((envelope) => (
           <Detail lang={lang} key={envelope.id} envelope={envelope}>
-            <div
+            <button
+              type="button"
               className={clsx(
-                "hover:bg-secondary group text-muted-foreground space-y-1 px-4 py-2 transition-colors duration-300 hover:cursor-pointer",
+                "hover:bg-secondary group text-muted-foreground block w-full bg-transparent px-4 py-2 text-left transition-colors duration-300 hover:cursor-pointer",
                 envelope.animate && "animate-in slide-in-from-right"
               )}
             >
-              <div className="flex items-center">
+              <div className="flex items-center space-y-1">
                 <span className="text-foreground">{envelope.subject}</span>
                 <ExternalLink
                   size={16}
@@ -165,9 +242,23 @@ function Content({ lang }: { lang: string }) {
                 <div className="truncate">{fmtFrom(envelope.from)}</div>
                 <div className="shrink-0">{fmtDate(envelope.created_at)}</div>
               </div>
-            </div>
+            </button>
           </Detail>
         ))}
+        {hasMore && envelopes.length > 0 && (
+          <div className="flex justify-center py-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore && <RotateCw className="animate-spin" />}
+              {loadingMore ? t("loadingMore") : t("loadMore")}
+            </Button>
+          </div>
+        )}
       </div>
       <div className="flex-1" />
     </div>

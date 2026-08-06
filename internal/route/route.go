@@ -6,12 +6,18 @@ import (
 	"tmail/internal/api"
 
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/sunls24/gox/server"
 )
 
 func Register(e *echo.Echo, cfg *config.Config) {
 	g := e.Group("/api")
-	g.POST("/report", server.WrapReplyResp(api.Report))
+	g.POST(
+		"/report",
+		server.WrapReplyResp(api.Report),
+		middleware.BodyLimit(cfg.ReportMaxBodySize),
+		requireReportHMAC(cfg),
+	)
 	g.GET("/turnstile/status", server.WrapResp(api.TurnstileStatus))
 
 	protected := g

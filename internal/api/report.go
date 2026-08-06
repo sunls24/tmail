@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"tmail/ent"
@@ -76,12 +77,12 @@ func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, 
 		return
 	}
 
-	for _, a := range attachments {
+	for i, a := range attachments {
 		if a.FileName == "" || len(a.Content) > maxSize {
 			continue
 		}
 
-		name := gox.MD5(a.FileName)
+		name := gox.MD5(fmt.Sprintf("%d:%d:%s", ownerID, i, a.FileName))
 		fp := filepath.Join(dir, name)
 		log.Info().Msgf("Attachment: %s -> %s", a.FileName, fp)
 		if err := os.WriteFile(fp, a.Content, 0o644); err != nil {

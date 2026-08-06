@@ -49,6 +49,12 @@ func TestMustNewRejectsInvalidTurnstileTTL(t *testing.T) {
 	assertPanics(t, MustNew)
 }
 
+func TestMustNewRejectsInvalidReportMaxBodySize(t *testing.T) {
+	t.Setenv("REPORT_MAX_BODY_SIZE", "0")
+
+	assertPanics(t, MustNew)
+}
+
 func assertPanics(t *testing.T, fn func() *Config) {
 	t.Helper()
 	defer func() {

@@ -1,4 +1,3 @@
-import { useMemo } from "react"
 import { Button } from "@/components/ui/button.tsx"
 import { Dices, FilePenLine, GalleryVerticalEnd } from "lucide-react"
 import { $address, $domainList, updateAddress } from "@/lib/store/store.ts"
@@ -10,7 +9,7 @@ import { type language, useTranslations } from "@/i18n/ui.ts"
 import { clsx } from "clsx"
 
 function Actions({ lang, className }: { lang: string; className?: string }) {
-  const t = useMemo(() => useTranslations(lang as language), [])
+  const t = useTranslations(lang as language)
 
   function onRandom() {
     const address = $address.get()

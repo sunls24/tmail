@@ -34,19 +34,25 @@
 - `DB_NAME`: 数据库名称，默认`tmail`
 
 ### 必须
+
 - `DOMAIN_LIST`: 支持的域名列表，使用`,`分割，例如: `isco.eu.org,chato.eu.org`
 
 ### 非必须
-- `ADMIN_ADDRESS`: 管理员邮箱地址，可以查看所有邮件 (默认返回最新100条)
+
+- `ADMIN_ADDRESS`: 管理员邮箱地址，可以查看所有邮件
 - `HOST`: 服务监听地址，默认为`127.0.0.1`
 - `PORT`: 服务监听端口，默认为`3000`
 - `API_KEY`: API 调用密钥；启用人机验证时，可通过 `X-API-Key` 请求头跳过验证
+- `REPORT_HMAC_SECRET`: Cloudflare Worker 调用 `/api/report` 时使用的共享密钥；配置后 `/api/report` 要求签名
+- `REPORT_MAX_BODY_SIZE`: 单封邮件请求体上限，单位字节，默认 `268435456`（256 MiB）
 - `TURNSTILE_SITE_KEY`: Cloudflare Turnstile Site Key
 - `TURNSTILE_SECRET_KEY`: Cloudflare Turnstile Secret Key
 - `TURNSTILE_COOKIE_TTL`: 启用人机验证时的 Cookie 有效时间，默认为`6h`
 - `DEBUG`: 本地 HTTP 调试时设置为`true`，生产环境不要开启
 
 `TURNSTILE_SITE_KEY` 和 `TURNSTILE_SECRET_KEY` 必须同时设置；两者都不设置时关闭人机验证。
+
+启用 `REPORT_HMAC_SECRET` 后，需要将相同的密钥配置到 Cloudflare Worker 的环境变量中，变量名为 `REPORT_HMAC_SECRET`。
 
 本地开发可以使用 Cloudflare 官方测试密钥：
 
@@ -63,7 +69,7 @@ _请修改其中的环境变量配置_
 ### Docker
 
 ```shell
-docker run --name tmail -d --restart unless-stopped -e 'DB_HOST=127.0.0.1' -e 'DB_PASS=postgres' -e 'HOST=0.0.0.0' -e 'DOMAIN_LIST=isco.eu.org,chato.eu.org' -e 'TURNSTILE_SITE_KEY=your-site-key' -e 'TURNSTILE_SECRET_KEY=your-secret-key' -p 3000:3000 sunls24/tmail:latest
+docker run --name tmail -d --restart unless-stopped -e 'DB_HOST=127.0.0.1' -e 'DB_PASS=postgres' -e 'HOST=0.0.0.0' -e 'DOMAIN_LIST=isco.eu.org,chato.eu.org' -e 'REPORT_HMAC_SECRET=your-report-hmac-secret' -e 'TURNSTILE_SITE_KEY=your-site-key' -e 'TURNSTILE_SECRET_KEY=your-secret-key' -p 3000:3000 sunls24/tmail:latest
 ```
 
 ### Docker Compose & Caddy (推荐)
@@ -85,6 +91,7 @@ services:
       - "DB_HOST=127.0.0.1"
       - "DB_PASS=postgres"
       - "DOMAIN_LIST=isco.eu.org,chato.eu.org"
+      - "REPORT_HMAC_SECRET=your-report-hmac-secret"
       - "TURNSTILE_SITE_KEY=your-site-key"
       - "TURNSTILE_SECRET_KEY=your-secret-key"
     volumes:

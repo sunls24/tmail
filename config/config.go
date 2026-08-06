@@ -17,6 +17,9 @@ type Config struct {
 	Debug        bool     `env:"DEBUG"`
 	APIKey       string   `env:"API_KEY"`
 
+	ReportHMACSecret  string `env:"REPORT_HMAC_SECRET"`
+	ReportMaxBodySize int64  `env:"REPORT_MAX_BODY_SIZE" envDefault:"268435456"`
+
 	TurnstileSiteKey   string        `env:"TURNSTILE_SITE_KEY"`
 	TurnstileSecretKey string        `env:"TURNSTILE_SECRET_KEY"`
 	TurnstileCookieTTL time.Duration `env:"TURNSTILE_COOKIE_TTL" envDefault:"6h"`
@@ -41,6 +44,9 @@ func MustNew() *Config {
 	}
 	if cfg.TurnstileEnabled() && cfg.TurnstileCookieTTL <= 0 {
 		panic(fmt.Sprintf("invalid TURNSTILE_COOKIE_TTL: %s", cfg.TurnstileCookieTTL))
+	}
+	if cfg.ReportMaxBodySize <= 0 {
+		panic(fmt.Sprintf("invalid REPORT_MAX_BODY_SIZE: %d", cfg.ReportMaxBodySize))
 	}
 	return &cfg
 }

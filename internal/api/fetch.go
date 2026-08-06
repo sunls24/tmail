@@ -17,13 +17,27 @@ import (
 
 const subAll = "all"
 
+const (
+	defaultFetchLimit = 30
+	maxFetchLimit     = 100
+)
+
 type ReqFetch struct {
-	To    string `query:"to"`
-	Since string `query:"since"`
+	To       string `query:"to"`
+	Since    string `query:"since"`
+	BeforeID int    `query:"before_id"`
+	Limit    int    `query:"limit"`
 }
 
 func Fetch(ctx context.Context, req ReqFetch) ([]*ent.Envelope, error) {
 	if req.To == "" {
+		return nil, server.BadParam()
+	}
+	limit := req.Limit
+	if limit == 0 {
+		limit = defaultFetchLimit
+	}
+	if limit < 1 || limit > maxFetchLimit || req.BeforeID < 0 {
 		return nil, server.BadParam()
 	}
 	admin := req.To == Config(ctx).AdminAddress
@@ -39,15 +53,17 @@ func Fetch(ctx context.Context, req ReqFetch) ([]*ent.Envelope, error) {
 	query := DB(ctx).Envelope.Query().
 		Select(envelope.FieldID, envelope.FieldTo, envelope.FieldFrom, envelope.FieldSubject, envelope.FieldCreatedAt).
 		Order(ent.Desc(envelope.FieldID))
+	if req.BeforeID > 0 {
+		query.Where(envelope.IDLT(req.BeforeID))
+	}
 	if !admin {
 		wheres := []predicate.Envelope{envelope.To(req.To)}
 		if !since.IsZero() {
 			wheres = append(wheres, envelope.CreatedAtGTE(since))
 		}
 		query.Where(wheres...)
-	} else {
-		query.Limit(100)
 	}
+	query.Limit(limit + 1)
 	list, err := query.All(ctx)
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +35,7 @@ function EditAddress({
   const [address, setAddress] = useState("")
   const domainList = useStore($domainList)
 
-  const t = useMemo(() => useTranslations(lang as language), [])
+  const t = useTranslations(lang as language)
 
   function onDomainChange(value: string) {
     setAddress(`${address!.split("@")[0]}@${value}`)
