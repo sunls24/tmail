@@ -13,9 +13,8 @@ import { ABORT_SAFE } from "@/lib/constant.ts"
 import { fetchError } from "@/lib/fetch-error.ts"
 import type { Attachment, Envelope } from "@/lib/types.ts"
 import { apiFetch, fmtDate, fmtString } from "@/lib/utils.ts"
-import { clsx } from "clsx"
 import { Download, Minimize2, Paperclip, RotateCw } from "lucide-react"
-import React, { useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 function Detail({
   children,
@@ -27,24 +26,34 @@ function Detail({
   lang: string
 }) {
   const [loading, setLoading] = useState(false)
-  const [expanded, setExpanded] = useState(false)
+  const [open, setOpen] = useState(false)
   const controller = useRef<AbortController>(null)
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [content, setContent] = useState("")
+  const [iframeHeight, setIframeHeight] = useState<number | null>(null)
+  const iframeCleanup = useRef<(() => void) | null>(null)
 
   const t = useTranslations(lang as language)
 
+  useEffect(() => {
+    return () => iframeCleanup.current?.()
+  }, [])
+
   function onOpenChange(open: boolean) {
+    setOpen(open)
     if (!open) {
+      iframeCleanup.current?.()
+      iframeCleanup.current = null
       controller.current?.abort(ABORT_SAFE)
       controller.current = null
       setAttachments([])
       setContent("")
       setLoading(false)
+      setIframeHeight(null)
       return
     }
 
-    setExpanded(false)
+    setIframeHeight(null)
     setLoading(true)
     controller.current?.abort(ABORT_SAFE)
     const currentController = new AbortController()
@@ -61,7 +70,6 @@ function Detail({
         }
         setAttachments(res.attachments)
         setContent(res.content)
-        setExpanded(true)
       })
       .catch((error) => {
         if (controller.current === currentController) {
@@ -75,6 +83,68 @@ function Detail({
       })
   }
 
+  function onIframeLoad(event: React.SyntheticEvent<HTMLIFrameElement>) {
+    iframeCleanup.current?.()
+    iframeCleanup.current = null
+
+    const frameDocument = event.currentTarget.contentDocument
+    if (!frameDocument) {
+      return
+    }
+
+    for (const anchor of frameDocument.querySelectorAll("a[href]")) {
+      const href = anchor.getAttribute("href")
+      if (!href) {
+        continue
+      }
+
+      try {
+        const url = new URL(href, frameDocument.baseURI)
+        if (!["http:", "https:", "mailto:", "tel:"].includes(url.protocol)) {
+          anchor.removeAttribute("href")
+          continue
+        }
+      } catch {
+        anchor.removeAttribute("href")
+        continue
+      }
+
+      anchor.setAttribute("target", "_blank")
+      anchor.setAttribute("rel", "noopener noreferrer")
+    }
+
+    function onFrameKeyDown(keyboardEvent: KeyboardEvent) {
+      if (keyboardEvent.key === "Escape") {
+        keyboardEvent.preventDefault()
+        onOpenChange(false)
+      }
+    }
+
+    frameDocument.addEventListener("keydown", onFrameKeyDown)
+
+    const updateHeight = () => {
+      const height = Math.max(
+        frameDocument.documentElement.scrollHeight,
+        frameDocument.body?.scrollHeight ?? 0
+      )
+      setIframeHeight((currentHeight) =>
+        currentHeight === height ? currentHeight : height
+      )
+    }
+
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(frameDocument.documentElement)
+    if (frameDocument.body) {
+      observer.observe(frameDocument.body)
+    }
+    updateHeight()
+
+    iframeCleanup.current = () => {
+      observer.disconnect()
+      frameDocument.removeEventListener("keydown", onFrameKeyDown)
+    }
+  }
+
   function onDownload(id: string) {
     window.open(
       `/api/download/${encodeURIComponent(id)}?to=${encodeURIComponent(envelope.to)}`,
@@ -84,16 +154,11 @@ function Detail({
   }
 
   return (
-    <Dialog onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={children} />
       <DialogContent
         showCloseButton={false}
-        className={clsx(
-          "flex max-w-[calc(100%-2rem)] flex-col sm:max-w-3xl",
-          expanded
-            ? "h-[85dvh] max-h-[85dvh] sm:h-[min(75dvh,48rem)]"
-            : "max-h-11/12"
-        )}
+        className="flex max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] flex-col sm:max-h-[calc(100dvh-2rem)] sm:max-w-3xl"
       >
         <DialogHeader className="relative">
           <DialogTitle>{envelope.subject}</DialogTitle>
@@ -138,10 +203,12 @@ function Detail({
           {content && (
             <iframe
               title={envelope.subject}
-              sandbox=""
+              sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
               referrerPolicy="no-referrer"
               srcDoc={content}
-              className="h-full w-full border-0"
+              onLoad={onIframeLoad}
+              style={iframeHeight ? { height: `${iframeHeight}px` } : undefined}
+              className="max-h-[calc(100dvh-8rem)] min-h-0 w-full border-0 sm:max-h-[calc(100dvh-8rem)]"
             />
           )}
         </div>
