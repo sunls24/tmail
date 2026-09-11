@@ -39,6 +39,13 @@ function Detail({
     return () => iframeCleanup.current?.()
   }, [])
 
+  useEffect(() => {
+    if (!open) return
+    const close = () => onOpenChange(false)
+    document.addEventListener("tmail:verification-expired", close)
+    return () => document.removeEventListener("tmail:verification-expired", close)
+  }, [open])
+
   function onOpenChange(open: boolean) {
     setOpen(open)
     if (!open) {

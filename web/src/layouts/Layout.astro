@@ -49,8 +49,11 @@ import "@/style/global.css"
     >
       <div class="flex w-full max-w-sm flex-col items-center gap-4 text-center">
         <img alt="" src="/favicon.svg" class="h-8 w-8" />
-        <p class="text-muted-foreground">
+        <p id="turnstileProgress" class="text-muted-foreground">
           {t("verificationInProgress")}
+        </p>
+        <p id="turnstileExpired" class="text-muted-foreground hidden">
+          {t("verificationExpired")}
         </p>
         <div id="turnstileWidget" class="min-h-16 w-full max-w-[300px]"></div>
         <button
@@ -103,6 +106,15 @@ import "@/style/global.css"
   const widget = document.getElementById("turnstileWidget")
 
   retry.addEventListener("click", () => window.location.reload())
+
+  document.addEventListener("tmail:verification-expired", () => {
+    document.body.removeAttribute("data-turnstile-verified")
+    appShell.setAttribute("inert", "")
+    appShell.setAttribute("aria-hidden", "true")
+    document.getElementById("turnstileProgress").classList.add("hidden")
+    document.getElementById("turnstileExpired").classList.remove("hidden")
+    retry.classList.remove("hidden")
+  })
 
   function showFailure() {
     retry.classList.remove("hidden")

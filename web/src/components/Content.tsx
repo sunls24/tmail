@@ -28,6 +28,8 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "@/components/ui/toast"
 
 const PAGE_SIZE = 30
+const INITIAL_RETRY_DELAY_MS = 2_000
+const MAX_RETRY_DELAY_MS = 30_000
 
 function fetchPage(address: string, signal: AbortSignal, beforeId?: number) {
   const params = new URLSearchParams({
@@ -81,6 +83,7 @@ function Content({ lang }: { lang: string }) {
     let latestId = 0
 
     async function poll() {
+      let retryDelay = INITIAL_RETRY_DELAY_MS
       while (!currentController.signal.aborted) {
         try {
           const params = new URLSearchParams({
@@ -90,7 +93,16 @@ function Content({ lang }: { lang: string }) {
           const res = await fetch(`/api/fetch/latest?${params}`, {
             signal: currentController.signal,
           })
+          if (currentController.signal.aborted) {
+            return
+          }
+          if (res.status === 401) {
+            setReady(false)
+            document.dispatchEvent(new Event("tmail:verification-expired"))
+            return
+          }
           if (res.status === 204) {
+            retryDelay = INITIAL_RETRY_DELAY_MS
             continue
           }
 
@@ -98,6 +110,7 @@ function Content({ lang }: { lang: string }) {
           if (currentController.signal.aborted) {
             return
           }
+          retryDelay = INITIAL_RETRY_DELAY_MS
           latestId = Math.max(latestId, envelope.id)
           envelope.animate = true
           setEnvelopes((current) => [envelope, ...current])
@@ -110,7 +123,9 @@ function Content({ lang }: { lang: string }) {
             return
           }
           fetchError(error)
-          await new Promise((resolve) => setTimeout(resolve, 1000))
+          const delay = retryDelay + Math.random() * 500
+          await new Promise((resolve) => setTimeout(resolve, delay))
+          retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY_MS)
         }
       }
     }

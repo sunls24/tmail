@@ -36,6 +36,8 @@ const ui = {
     confirm: "Confirm",
     receiveNew: "Received new mail from {0}",
     verificationInProgress: "Security verification in progress. Please wait…",
+    verificationExpired:
+      "Security verification has expired. Please refresh the page.",
     retry: "Retry",
   },
   zh: {
@@ -67,6 +69,7 @@ const ui = {
     confirm: "确认",
     receiveNew: "收到来自 {0} 的新邮件",
     verificationInProgress: "正在进行安全验证，请稍候…",
+    verificationExpired: "安全验证已过期，请刷新页面",
     retry: "重试",
   },
 }
