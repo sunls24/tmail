@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"tmail/ent"
 
 	"github.com/jhillyerd/enmime/v2"
@@ -16,7 +17,7 @@ import (
 
 func Report(ctx context.Context) (*server.Reply, error) {
 	ec := server.EchoContext(ctx)
-	to := ec.QueryParam("to")
+	to := validUTF8(ec.QueryParam("to"))
 	if to == "" {
 		return nil, server.BadParam()
 	}
@@ -24,8 +25,8 @@ func Report(ctx context.Context) (*server.Reply, error) {
 	if err != nil {
 		return nil, err
 	}
-	subject := envelope.GetHeader("subject")
-	from := envelope.GetHeader("from")
+	subject := validUTF8(envelope.GetHeader("subject"))
+	from := validUTF8(envelope.GetHeader("from"))
 	if from == "" {
 		return server.OK(nil), nil
 	}
@@ -33,6 +34,7 @@ func Report(ctx context.Context) (*server.Reply, error) {
 	if content == "" {
 		content = envelope.Text
 	}
+	content = validUTF8(content)
 
 	slog.Debug("Report", "to", to, "from", from, "subject", subject)
 	e, err := DB(ctx).Envelope.Create().
@@ -63,6 +65,10 @@ func envelopeSummary(e *ent.Envelope) *ent.Envelope {
 	}
 }
 
+func validUTF8(s string) string {
+	return strings.ToValidUTF8(s, "\uFFFD")
+}
+
 func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, ownerID int) {
 	const maxSize = 200000000 // 200M
 	if len(attachments) == 0 {
@@ -81,9 +87,10 @@ func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, 
 			continue
 		}
 
-		name := gox.MD5(fmt.Sprintf("%d:%d:%s", ownerID, i, a.FileName))
+		filename := validUTF8(a.FileName)
+		name := gox.MD5(fmt.Sprintf("%d:%d:%s", ownerID, i, filename))
 		fp := filepath.Join(dir, name)
-		slog.Info("Attachment", "filename", a.FileName, "filepath", fp)
+		slog.Info("Attachment", "filename", filename, "filepath", fp)
 		if err := os.WriteFile(fp, a.Content, 0o644); err != nil {
 			slog.Error("WriteFile", "err", err)
 			continue
@@ -91,9 +98,9 @@ func saveAttachment(ctx context.Context, attachments []*enmime.Part, to string, 
 
 		_, err := DB(ctx).Attachment.Create().
 			SetID(filepath.Base(dir) + name[:6] + gox.RandStr(4)).
-			SetFilename(a.FileName).
+			SetFilename(filename).
 			SetFilepath(fp).
-			SetContentType(a.ContentType).
+			SetContentType(validUTF8(a.ContentType)).
 			SetOwnerID(ownerID).
 			Save(ctx)
 		if err != nil {

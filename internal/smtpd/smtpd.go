@@ -84,6 +84,7 @@ func NewServer(cfg Config) (*smtp.Server, error) {
 		client:    &http.Client{Timeout: operationTimeout},
 	}
 	server := smtp.NewServer(backend)
+	server.ErrorLog = smtpLogger{}
 	server.Addr = cfg.Addr
 	server.Domain = hostname
 	server.MaxMessageBytes = cfg.ReportMaxBodySize
@@ -213,4 +214,24 @@ func temporaryError(message string) error {
 
 func permanentError(code int, enhancedCode smtp.EnhancedCode, message string) error {
 	return &smtp.SMTPError{Code: code, EnhancedCode: enhancedCode, Message: message}
+}
+
+// smtpLogger routes go-smtp internal logs into slog: panics and accept
+// failures stay visible, remote-side disconnects are demoted to debug.
+type smtpLogger struct{}
+
+func (smtpLogger) Printf(format string, v ...any) {
+	msg := fmt.Sprintf(format, v...)
+	switch {
+	case strings.HasPrefix(msg, "panic serving"):
+		slog.Error(msg)
+	case strings.HasPrefix(msg, "accept error"):
+		slog.Warn(msg)
+	default:
+		slog.Debug(msg)
+	}
+}
+
+func (l smtpLogger) Println(v ...any) {
+	l.Printf("%s", strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }

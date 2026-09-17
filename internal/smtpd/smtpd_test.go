@@ -1,14 +1,17 @@
 package smtpd
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/emersion/go-smtp"
@@ -162,4 +165,56 @@ type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
+}
+
+type logRecord struct {
+	level slog.Level
+	msg   string
+}
+
+type captureHandler struct {
+	mu      sync.Mutex
+	records []logRecord
+}
+
+func (h *captureHandler) Enabled(context.Context, slog.Level) bool { return true }
+
+func (h *captureHandler) Handle(_ context.Context, r slog.Record) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.records = append(h.records, logRecord{r.Level, r.Message})
+	return nil
+}
+
+func (h *captureHandler) WithAttrs([]slog.Attr) slog.Handler { return h }
+
+func (h *captureHandler) WithGroup(string) slog.Handler { return h }
+
+func TestSMTPLoggerRouting(t *testing.T) {
+	handler := &captureHandler{}
+	prev := slog.Default()
+	slog.SetDefault(slog.New(handler))
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	logger := smtpLogger{}
+	logger.Printf("error handling %v: %s", "203.0.113.1:2500", "read: connection reset by peer")
+	logger.Printf("accept error: %s; retrying in %s", "listen tcp :25: accept: too many open files", "10ms")
+	logger.Printf("panic serving %v: %v", "203.0.113.1:2500", "boom")
+	logger.Println("plain message")
+
+	if len(handler.records) != 4 {
+		t.Fatalf("unexpected record count: %d", len(handler.records))
+	}
+	if got := handler.records[0]; got.level != slog.LevelDebug || !strings.Contains(got.msg, "connection reset by peer") {
+		t.Errorf("expected connection reset at debug level, got %v", got)
+	}
+	if got := handler.records[1]; got.level != slog.LevelWarn {
+		t.Errorf("expected accept error at warn level, got %v", got)
+	}
+	if got := handler.records[2]; got.level != slog.LevelError {
+		t.Errorf("expected panic at error level, got %v", got)
+	}
+	if got := handler.records[3]; got.level != slog.LevelDebug || got.msg != "plain message" {
+		t.Errorf("unexpected Println record: %v", got)
+	}
 }
