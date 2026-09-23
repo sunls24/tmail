@@ -53,5 +53,5 @@ func validReportHMAC(timestamp, signature string, c *echo.Context, secret string
 	mac := hmac.New(sha256.New, []byte(secret))
 	_, _ = mac.Write([]byte(message))
 	expected := hex.EncodeToString(mac.Sum(nil))
-	return signature == expected
+	return hmac.Equal([]byte(signature), []byte(expected))
 }
